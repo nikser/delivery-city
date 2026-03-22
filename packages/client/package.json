@@ -1,0 +1,19 @@
+{
+  "name": "@delivery-city/client",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@delivery-city/shared": "*",
+    "phaser": "^3.60.0",
+    "socket.io-client": "^4.7.4"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12"
+  }
+}
