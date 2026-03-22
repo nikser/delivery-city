@@ -10,11 +10,11 @@
     "@delivery-city/server": "*"
   },
   "devDependencies": {
-    "jest": "^29.7.0",
+    "jest": "^30.3.0",
     "ts-jest": "^29.1.2",
     "typescript": "^5.3.3",
-    "@types/jest": "^29.5.11",
-    "@types/node": "^20.11.0"
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.5.0"
   },
   "jest": {
     "preset": "ts-jest",
