@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import { WelcomeScene } from './scenes/WelcomeScene'
 import { LobbyScene } from './scenes/LobbyScene'
 import { GameScene } from './scenes/GameScene'
 import { ResultScene } from './scenes/ResultScene'
@@ -8,7 +9,7 @@ const config: Phaser.Types.Core.GameConfig = {
   width: window.innerWidth,
   height: window.innerHeight,
   backgroundColor: '#3a3228',
-  scene: [LobbyScene, GameScene, ResultScene],
+  scene: [WelcomeScene, LobbyScene, GameScene, ResultScene],
   parent: 'game',
   scale: {
     mode: Phaser.Scale.RESIZE,

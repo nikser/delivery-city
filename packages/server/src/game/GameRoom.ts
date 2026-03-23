@@ -4,6 +4,7 @@ import {
   GameState,
   MapData,
   PlayerState,
+  BotDifficulty,
   ORDER_TTL_HELD,
   SESSION_DURATION,
   MOVE_DURATION,
@@ -32,6 +33,7 @@ export class GameRoom {
   private gameLoopInterval: NodeJS.Timeout | null = null
   private sessionTimerInterval: NodeJS.Timeout | null = null
   private resetTimeout: NodeJS.Timeout | null = null
+  private lobbyDifficulty: BotDifficulty = 'medium'
 
   constructor(
     private io: Server,
@@ -151,6 +153,14 @@ export class GameRoom {
 
   getLobbyPlayers(): Array<{ id: string; nickname: string; isBot: boolean }> {
     return Object.values(this.state.players).map((p) => ({ id: p.id, nickname: p.nickname, isBot: p.isBot }))
+  }
+
+  getLobbyDifficulty(): BotDifficulty {
+    return this.lobbyDifficulty
+  }
+
+  setLobbyDifficulty(difficulty: BotDifficulty): void {
+    this.lobbyDifficulty = difficulty
   }
 
   getMap(): MapData {
@@ -348,8 +358,7 @@ export class GameRoom {
     this.moveStart.clear()
     this.deliveryCount.clear()
 
-    // Emit empty lobby, then kick all sockets from the room
+    // Emit empty lobby — sockets remain in the room so they receive the update
     this.io.to(this.roomId).emit('lobby:update', { players: [] })
-    this.io.in(this.roomId).socketsLeave(this.roomId)
   }
 }

@@ -59,17 +59,25 @@ export interface GameState {
   orders: Record<string, OrderState>
 }
 
+export type BotDifficulty = 'slow' | 'medium' | 'fast'
+
 export interface ClientToServerEvents {
+  'room:create': () => void
+  'room:join': (data: { code: string }) => void
   'player:join': (data: { nickname: string }) => void
   'player:leave': () => void
   'player:input': (data: { direction: Direction; inputSeq: number }) => void
   'session:start': () => void
-  'bot:add': (data: { difficulty: 'slow' | 'medium' | 'fast' }) => void
+  'bot:add': () => void
   'bot:remove': () => void
+  'bot:difficulty': (data: { difficulty: BotDifficulty }) => void
 }
 
 export interface ServerToClientEvents {
-  'lobby:update': (data: { players: Array<{ id: string; nickname: string; isBot: boolean }> }) => void
+  'room:created': (data: { code: string; players: Array<{ id: string; nickname: string; isBot: boolean }>; difficulty: BotDifficulty }) => void
+  'room:joined': (data: { code: string; players: Array<{ id: string; nickname: string; isBot: boolean }>; difficulty: BotDifficulty; phase: 'lobby' | 'playing' | 'results' }) => void
+  'room:error': (data: { message: string }) => void
+  'lobby:update': (data: { players: Array<{ id: string; nickname: string; isBot: boolean }>; difficulty: BotDifficulty }) => void
   'game:start': (data: { map: MapData; state: GameState }) => void
   'game:tick': (data: { tick: number; players: Record<string, PlayerState>; orders: Record<string, OrderState>; sessionTimeLeft: number }) => void
   'order:spawned': (data: { order: OrderState }) => void

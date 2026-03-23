@@ -4,7 +4,7 @@ import { Server } from 'socket.io'
 import path from 'path'
 import { GameRoom } from './game/GameRoom'
 import { generateId } from './game/IdGenerator'
-import { BOT_SPEEDS } from '@delivery-city/shared'
+import { BOT_SPEEDS, BotDifficulty } from '@delivery-city/shared'
 
 const app = express()
 const httpServer = createServer(app)
@@ -14,69 +14,180 @@ const io = new Server(httpServer, { cors: { origin: '*' } })
 app.use(express.static(path.join(__dirname, '../../client/dist')))
 
 const rooms = new Map<string, GameRoom>()
-let defaultRoom: GameRoom
+// Maps socketId → roomCode
+const socketRooms = new Map<string, string>()
 
-function getOrCreateDefaultRoom(): GameRoom {
-  if (!defaultRoom) {
-    defaultRoom = new GameRoom(io, 'main')
-    rooms.set('main', defaultRoom)
+function generateCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let code = ''
+  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)]
+  // Ensure uniqueness
+  if (rooms.has(code)) return generateCode()
+  return code
+}
+
+function getRoom(code: string): GameRoom | undefined {
+  return rooms.get(code)
+}
+
+function hasHumanPlayers(room: GameRoom): boolean {
+  return Object.values(room.getState().players).some((p) => !p.isBot)
+}
+
+function cleanupRoomIfEmpty(code: string, room: GameRoom): void {
+  if (!hasHumanPlayers(room)) {
+    rooms.delete(code)
   }
-  return defaultRoom
+}
+
+function lobbyBroadcast(code: string, room: GameRoom): void {
+  io.to(code).emit('lobby:update', {
+    players: room.getLobbyPlayers(),
+    difficulty: room.getLobbyDifficulty(),
+  })
+}
+
+// Detaches socket from its current room (socket.io membership + socketRooms map).
+// Does NOT delete the room — callers that permanently leave handle that separately.
+function leaveCurrentRoom(socketId: string): void {
+  const code = socketRooms.get(socketId)
+  if (!code) return
+  const room = rooms.get(code)
+  if (room) {
+    room.removePlayer(socketId)
+    lobbyBroadcast(code, room)
+  }
+  const socket = io.sockets.sockets.get(socketId)
+  socket?.leave(code)
+  socketRooms.delete(socketId)
 }
 
 io.on('connection', (socket) => {
   console.log('connected:', socket.id)
-  const room = getOrCreateDefaultRoom()
+
+  socket.on('room:create', () => {
+    const prevCode = socketRooms.get(socket.id)
+    leaveCurrentRoom(socket.id)
+    if (prevCode) {
+      const prevRoom = rooms.get(prevCode)
+      if (prevRoom && !hasHumanPlayers(prevRoom)) rooms.delete(prevCode)
+    }
+    const code = generateCode()
+    const room = new GameRoom(io, code)
+    rooms.set(code, room)
+    socket.join(code)
+    socketRooms.set(socket.id, code)
+    socket.emit('room:created', { code, players: room.getLobbyPlayers(), difficulty: room.getLobbyDifficulty() })
+  })
+
+  socket.on('room:join', ({ code }) => {
+    const normalised = code.trim().toUpperCase()
+    const room = getRoom(normalised)
+    if (!room) {
+      socket.emit('room:error', { message: 'Комната не найдена' })
+      return
+    }
+    leaveCurrentRoom(socket.id)
+    socket.join(normalised)
+    socketRooms.set(socket.id, normalised)
+    socket.emit('room:joined', {
+      code: normalised,
+      players: room.getLobbyPlayers(),
+      difficulty: room.getLobbyDifficulty(),
+      phase: room.getState().phase,
+    })
+    if (room.getState().phase === 'lobby') {
+      lobbyBroadcast(normalised, room)
+    }
+  })
 
   socket.on('player:join', ({ nickname }) => {
-    socket.join('main')
+    const code = socketRooms.get(socket.id)
+    if (!code) return
+    const room = getRoom(code)
+    if (!room) return
     room.addPlayer(socket.id, nickname || `Courier_${socket.id.slice(0, 4)}`)
-    io.to('main').emit('lobby:update', { players: room.getLobbyPlayers() })
+    lobbyBroadcast(code, room)
 
     if (room.getState().phase === 'playing') {
-      // Опоздавший — отправить текущее состояние
       socket.emit('game:start', { map: room.getMap(), state: room.getState() })
     }
   })
 
   socket.on('player:leave', () => {
+    const code = socketRooms.get(socket.id)
+    if (!code) return
+    const room = getRoom(code)
+    if (!room) return
     room.removePlayer(socket.id)
-    io.to('main').emit('lobby:update', { players: room.getLobbyPlayers() })
-    socket.leave('main')
+    lobbyBroadcast(code, room)
   })
 
   socket.on('player:input', ({ direction }) => {
-    room.processInput(socket.id, direction)
+    const code = socketRooms.get(socket.id)
+    if (!code) return
+    getRoom(code)?.processInput(socket.id, direction)
   })
 
-  socket.on('bot:add', ({ difficulty }) => {
-    if (room.getState().phase !== 'lobby') return
+  socket.on('bot:difficulty', ({ difficulty }) => {
+    const code = socketRooms.get(socket.id)
+    if (!code) return
+    const room = getRoom(code)
+    if (!room || room.getState().phase !== 'lobby') return
+    if (!room.getState().players[socket.id]) return
+    room.setLobbyDifficulty(difficulty as BotDifficulty)
+    lobbyBroadcast(code, room)
+  })
+
+  socket.on('bot:add', () => {
+    const code = socketRooms.get(socket.id)
+    if (!code) return
+    const room = getRoom(code)
+    if (!room || room.getState().phase !== 'lobby') return
+    if (!room.getState().players[socket.id]) return
     const botId = generateId('bot')
     const botNum = Object.values(room.getState().players).filter(p => p.isBot).length + 1
     const speedMap: Record<string, number> = { slow: BOT_SPEEDS[0], medium: BOT_SPEEDS[1], fast: BOT_SPEEDS[2] }
-    room.addPlayer(botId, `Bot_${botNum}`, true, speedMap[difficulty] ?? BOT_SPEEDS[1])
-    io.to('main').emit('lobby:update', { players: room.getLobbyPlayers() })
+    room.addPlayer(botId, `Bot_${botNum}`, true, speedMap[room.getLobbyDifficulty()] ?? BOT_SPEEDS[1])
+    lobbyBroadcast(code, room)
   })
 
   socket.on('bot:remove', () => {
-    if (room.getState().phase !== 'lobby') return
+    const code = socketRooms.get(socket.id)
+    if (!code) return
+    const room = getRoom(code)
+    if (!room || room.getState().phase !== 'lobby') return
+    if (!room.getState().players[socket.id]) return
     const bots = Object.values(room.getState().players).filter(p => p.isBot)
     if (bots.length === 0) return
     const last = bots[bots.length - 1]
     room.removePlayer(last.id)
-    io.to('main').emit('lobby:update', { players: room.getLobbyPlayers() })
+    lobbyBroadcast(code, room)
   })
 
   socket.on('session:start', () => {
-    if (room.getState().phase !== 'lobby') return
+    const code = socketRooms.get(socket.id)
+    if (!code) return
+    const room = getRoom(code)
+    if (!room || room.getState().phase !== 'lobby') return
+    if (!room.getState().players[socket.id]) return
     room.startSession()
-    io.to('main').emit('game:start', { map: room.getMap(), state: room.getState() })
+    io.to(code).emit('game:start', { map: room.getMap(), state: room.getState() })
   })
 
   socket.on('disconnect', () => {
-    room.removePlayer(socket.id)
-    io.to('main').emit('player:disconnected', { playerId: socket.id })
-    io.to('main').emit('lobby:update', { players: room.getLobbyPlayers() })
+    const code = socketRooms.get(socket.id)
+    if (code) {
+      const room = getRoom(code)
+      if (room) {
+        room.removePlayer(socket.id)
+        io.to(code).emit('player:disconnected', { playerId: socket.id })
+        lobbyBroadcast(code, room)
+        // Clean up rooms with no human players
+        cleanupRoomIfEmpty(code, room)
+      }
+    }
+    socketRooms.delete(socket.id)
   })
 })
 

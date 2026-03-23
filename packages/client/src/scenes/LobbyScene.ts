@@ -5,13 +5,63 @@ export class LobbyScene extends Phaser.Scene {
   private nicknameInput!: HTMLInputElement
   private playerListRows: Phaser.GameObjects.Text[] = []
   private statusText!: Phaser.GameObjects.Text
+  private roomCode: string = ''
+  private initialPlayers: Array<{ id: string; nickname: string; isBot: boolean }> = []
+  private initialDifficulty: 'slow' | 'medium' | 'fast' = 'medium'
+  private initialPhase: 'lobby' | 'playing' | 'results' = 'lobby'
 
   constructor() {
     super({ key: 'LobbyScene' })
   }
 
+  init(data: { code: string; players?: Array<{ id: string; nickname: string; isBot: boolean }>; difficulty?: 'slow' | 'medium' | 'fast'; phase?: 'lobby' | 'playing' | 'results' }): void {
+    this.roomCode = data?.code ?? ''
+    this.initialPlayers = data?.players ?? []
+    this.initialDifficulty = data?.difficulty ?? 'medium'
+    this.initialPhase = data?.phase ?? 'lobby'
+  }
+
   create(): void {
+    this.playerListRows = []
     const { width, height } = this.scale
+
+    // Back button (top-left)
+    const backBtn = this.add.text(24, 18, '← назад', {
+      fontFamily: 'monospace',
+      fontSize: '16px',
+      color: '#6666aa',
+    }).setOrigin(0, 0).setInteractive({ useHandCursor: true })
+    backBtn.on('pointerover', () => backBtn.setColor('#aaaaff'))
+    backBtn.on('pointerout', () => backBtn.setColor('#6666aa'))
+    backBtn.on('pointerdown', () => {
+      this.cleanup()
+      this.scene.start('WelcomeScene')
+    })
+
+    // Room code display (top-right)
+    if (this.roomCode) {
+      const codeLabel = this.add.text(width - 16, 18, `КОД КОМНАТЫ:`, {
+        fontFamily: 'monospace',
+        fontSize: '12px',
+        color: '#555577',
+      }).setOrigin(1, 0)
+
+      const codeText = this.add.text(width - 16, 34, this.roomCode, {
+        fontFamily: 'monospace',
+        fontSize: '28px',
+        color: '#44ccff',
+        stroke: '#0066aa',
+        strokeThickness: 2,
+      }).setOrigin(1, 0).setInteractive({ useHandCursor: true })
+
+      codeText.on('pointerover', () => codeText.setColor('#ffffff'))
+      codeText.on('pointerout', () => codeText.setColor('#44ccff'))
+      codeText.on('pointerdown', () => {
+        navigator.clipboard?.writeText(this.roomCode)
+        codeText.setText('скопировано!')
+        this.time.delayedCall(1500, () => codeText.setText(this.roomCode))
+      })
+    }
 
     // Title
     this.add.text(width / 2, height * 0.08, 'DELIVERY CITY', {
@@ -27,6 +77,11 @@ export class LobbyScene extends Phaser.Scene {
       fontSize: '18px',
       color: '#aaaacc',
     }).setOrigin(0.5)
+
+    if (this.initialPhase === 'playing') {
+      this.createMidGameJoinUI(width, height)
+      return
+    }
 
     // Nickname label
     this.add.text(width / 2, height * 0.23, 'Введи ник:', {
@@ -90,7 +145,6 @@ export class LobbyScene extends Phaser.Scene {
 
     // Bot difficulty selector
     type Difficulty = 'slow' | 'medium' | 'fast'
-    let botDifficulty: Difficulty = 'medium'
     const difficulties: { key: Difficulty; label: string }[] = [
       { key: 'slow',   label: 'МЕД' },
       { key: 'medium', label: 'СР'  },
@@ -108,7 +162,6 @@ export class LobbyScene extends Phaser.Scene {
     })
 
     const selectDifficulty = (d: Difficulty) => {
-      botDifficulty = d
       diffBtns.forEach(({ btn, key }) => {
         btn.setColor(key === d ? '#000000' : '#aaaaaa')
         btn.setBackgroundColor(key === d ? '#44ccff' : '#223344')
@@ -117,8 +170,11 @@ export class LobbyScene extends Phaser.Scene {
 
     diffBtns.forEach(({ btn, key }) => {
       btn.setInteractive({ useHandCursor: true })
-      btn.on('pointerdown', () => selectDifficulty(key))
+      btn.on('pointerdown', () => getSocket().emit('bot:difficulty', { difficulty: key }))
     })
+
+    // Apply initial difficulty received from server
+    selectDifficulty(this.initialDifficulty)
 
     // Bot buttons — disabled until joined
     const botAddBtn = this.add.text(width / 2 - 90, height * 0.57, '[ + БОТ ]', {
@@ -190,7 +246,7 @@ export class LobbyScene extends Phaser.Scene {
 
     botAddBtn.on('pointerover', () => botAddBtn.setColor('#ffffff'))
     botAddBtn.on('pointerout',  () => botAddBtn.setColor('#44ccff'))
-    botAddBtn.on('pointerdown', () => getSocket().emit('bot:add', { difficulty: botDifficulty }))
+    botAddBtn.on('pointerdown', () => getSocket().emit('bot:add'))
 
     botRemoveBtn.on('pointerover', () => botRemoveBtn.setColor('#ffffff'))
     botRemoveBtn.on('pointerout',  () => botRemoveBtn.setColor('#ff6644'))
@@ -224,25 +280,15 @@ export class LobbyScene extends Phaser.Scene {
       this.playerListRows.push(row)
     }
 
+    // Render initial player list (received before this scene was created)
+    this.renderPlayerList(this.initialPlayers)
+
     // Socket events
     const socket = getSocket()
 
     socket.on('lobby:update', (data) => {
-      const MAX_ROWS = 10
-      for (let i = 0; i < MAX_ROWS; i++) {
-        const p = data.players[i]
-        if (p) {
-          const nick = p.nickname.length > 16 ? p.nickname.slice(0, 15) + '…' : p.nickname
-          const nickPad = nick.padEnd(17)
-          const type = p.isBot ? 'бот ' : 'игрок'
-          const color = p.isBot ? '#7799bb' : '#ccccff'
-          this.playerListRows[i].setText(`${String(i + 1).padStart(2)}.  ${nickPad}${type}`)
-          this.playerListRows[i].setColor(color)
-        } else {
-          this.playerListRows[i].setText(`${String(i + 1).padStart(2)}.  —`)
-          this.playerListRows[i].setColor('#333355')
-        }
-      }
+      this.renderPlayerList(data.players)
+      selectDifficulty(data.difficulty)
     })
 
     socket.on('game:start', (data) => {
@@ -278,6 +324,96 @@ export class LobbyScene extends Phaser.Scene {
     const socket = getSocket()
     socket.off('lobby:update')
     socket.off('game:start')
+  }
+
+  private createMidGameJoinUI(width: number, height: number): void {
+    this.add.text(width / 2, height * 0.36, '🎮 Игра уже идёт!', {
+      fontFamily: 'monospace',
+      fontSize: '28px',
+      color: '#ffaa00',
+    }).setOrigin(0.5)
+
+    this.add.text(width / 2, height * 0.46, 'Ты можешь подключиться прямо сейчас\nи сразу начать доставлять заказы.', {
+      fontFamily: 'monospace',
+      fontSize: '16px',
+      color: '#aaaacc',
+      align: 'center',
+    }).setOrigin(0.5)
+
+    // Nickname input
+    this.add.text(width / 2, height * 0.56, 'Введи ник:', {
+      fontFamily: 'monospace',
+      fontSize: '18px',
+      color: '#ffffff',
+    }).setOrigin(0.5)
+
+    this.nicknameInput = document.createElement('input')
+    this.nicknameInput.type = 'text'
+    this.nicknameInput.placeholder = 'Твой ник...'
+    this.nicknameInput.maxLength = 16
+    this.nicknameInput.value = localStorage.getItem('nickname') || ''
+    Object.assign(this.nicknameInput.style, {
+      position: 'fixed',
+      fontFamily: 'monospace',
+      fontSize: '20px',
+      padding: '10px 16px',
+      background: '#16213e',
+      color: '#ffffff',
+      border: '2px solid #4444aa',
+      borderRadius: '4px',
+      outline: 'none',
+      textAlign: 'center',
+      width: '280px',
+      zIndex: '10',
+    })
+    document.body.appendChild(this.nicknameInput)
+    this.repositionInput()
+
+    this.nicknameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') this.handleMidGameJoin()
+    })
+
+    const joinBtn = this.add.text(width / 2, height * 0.72, '[ ВОЙТИ В ИГРУ ]', {
+      fontFamily: 'monospace',
+      fontSize: '28px',
+      color: '#00ff88',
+      backgroundColor: '#002244',
+      padding: { x: 24, y: 12 },
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true })
+
+    joinBtn.on('pointerover', () => joinBtn.setColor('#ffffff'))
+    joinBtn.on('pointerout', () => joinBtn.setColor('#00ff88'))
+    joinBtn.on('pointerdown', () => this.handleMidGameJoin())
+
+    const socket = getSocket()
+    socket.on('game:start', (data) => {
+      this.cleanup()
+      this.scene.start('GameScene', data)
+    })
+  }
+
+  private handleMidGameJoin(): void {
+    const nickname = this.nicknameInput.value.trim() || 'Player'
+    localStorage.setItem('nickname', nickname)
+    getSocket().emit('player:join', { nickname })
+  }
+
+  private renderPlayerList(players: Array<{ id: string; nickname: string; isBot: boolean }>): void {
+    const MAX_ROWS = 10
+    for (let i = 0; i < MAX_ROWS; i++) {
+      const p = players[i]
+      if (p) {
+        const nick = p.nickname.length > 16 ? p.nickname.slice(0, 15) + '…' : p.nickname
+        const nickPad = nick.padEnd(17)
+        const type = p.isBot ? 'бот ' : 'игрок'
+        const color = p.isBot ? '#7799bb' : '#ccccff'
+        this.playerListRows[i].setText(`${String(i + 1).padStart(2)}.  ${nickPad}${type}`)
+        this.playerListRows[i].setColor(color)
+      } else {
+        this.playerListRows[i].setText(`${String(i + 1).padStart(2)}.  —`)
+        this.playerListRows[i].setColor('#333355')
+      }
+    }
   }
 
   shutdown(): void {

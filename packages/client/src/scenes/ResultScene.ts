@@ -115,7 +115,12 @@ export class ResultScene extends Phaser.Scene {
     playBtn.on('pointerover', () => playBtn.setColor('#ffffff'))
     playBtn.on('pointerout', () => playBtn.setColor('#00ff88'))
     playBtn.on('pointerdown', () => {
-      this.scene.start('LobbyScene')
+      const code = sessionStorage.getItem('roomCode')
+      if (code) {
+        this.scene.start('LobbyScene', { code })
+      } else {
+        this.scene.start('WelcomeScene')
+      }
     })
   }
 }
