@@ -42,6 +42,7 @@ export interface PlayerState {
   direction: Direction
   isMoving: boolean
   moveProgress: number
+  moveDuration: number
   fromTileX: number
   fromTileY: number
   carryingOrderId: string | null
@@ -60,14 +61,15 @@ export interface GameState {
 
 export interface ClientToServerEvents {
   'player:join': (data: { nickname: string }) => void
+  'player:leave': () => void
   'player:input': (data: { direction: Direction; inputSeq: number }) => void
   'session:start': () => void
-  'bot:add': () => void
+  'bot:add': (data: { difficulty: 'slow' | 'medium' | 'fast' }) => void
   'bot:remove': () => void
 }
 
 export interface ServerToClientEvents {
-  'lobby:update': (data: { players: Array<{ id: string; nickname: string }> }) => void
+  'lobby:update': (data: { players: Array<{ id: string; nickname: string; isBot: boolean }> }) => void
   'game:start': (data: { map: MapData; state: GameState }) => void
   'game:tick': (data: { tick: number; players: Record<string, PlayerState>; orders: Record<string, OrderState>; sessionTimeLeft: number }) => void
   'order:spawned': (data: { order: OrderState }) => void
@@ -86,4 +88,5 @@ export const SESSION_DURATION = 300
 export const ORDER_TTL_MAP = 45_000
 export const ORDER_TTL_HELD = 30_000
 export const MOVE_SPEED = 2
-export const MOVE_DURATION = 300
+export const MOVE_DURATION = 150
+export const BOT_SPEEDS = [280, 180, 110] // slow, medium, fast (ms per tile)

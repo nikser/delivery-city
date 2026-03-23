@@ -17,7 +17,7 @@ export function generateMap(): MapData {
       if (rx && ry) {
         row.push('INTERSECTION')
       } else if (ry && !rx) {
-        row.push(y % 5 === 0 ? 'ROAD_EAST' : 'ROAD_WEST')
+        row.push(y % 5 === 0 ? 'ROAD_WEST' : 'ROAD_EAST')
       } else if (rx && !ry) {
         row.push(x % 5 === 0 ? 'ROAD_SOUTH' : 'ROAD_NORTH')
       } else {
@@ -35,13 +35,15 @@ export function generateMap(): MapData {
     }
   }
 
-  // Pick 16 evenly distributed spawn points from all intersections
-  const spawnPoints: Array<{ x: number; y: number }> = []
-  const count = 16
-  const step = allIntersections.length / count
-  for (let i = 0; i < count; i++) {
-    spawnPoints.push(allIntersections[Math.floor(i * step)])
-  }
+  // Pick 16 spawn points sorted by distance to map center
+  const center = size / 2
+  const spawnPoints = [...allIntersections]
+    .sort((a, b) => {
+      const da = Math.abs(a.x - center) + Math.abs(a.y - center)
+      const db = Math.abs(b.x - center) + Math.abs(b.y - center)
+      return da - db
+    })
+    .slice(0, 16)
 
   return { width: size, height: size, tiles, spawnPoints }
 }

@@ -7,6 +7,7 @@ import {
   ORDER_TTL_HELD,
   SESSION_DURATION,
   MOVE_DURATION,
+  BOT_SPEEDS,
 } from '@delivery-city/shared'
 import { generateMap } from '../map/MapGenerator'
 import { generateId } from './IdGenerator'
@@ -15,7 +16,7 @@ import { canMove, applyDirection } from './MovementSystem'
 import { calculateDeliveryScore } from './ScoreSystem'
 import { BotController } from '../bots/BotController'
 
-const PLAYER_COLORS = [0xFF4444, 0x44FF44, 0x4444FF, 0xFFFF44, 0xFF44FF, 0x44FFFF, 0xFFAA44, 0xAA44FF]
+const PLAYER_COLORS = [0xc24040, 0x4a8a4a, 0x4060a8, 0xb8a030, 0xa83870, 0x38808a, 0xc06828, 0x7038a0]
 
 export class GameRoom {
   readonly id: string
@@ -48,10 +49,14 @@ export class GameRoom {
     this.deliveryCount = new Map()
   }
 
-  addPlayer(socketId: string, nickname: string, isBot = false): void {
+  addPlayer(socketId: string, nickname: string, isBot = false, botSpeed?: number): void {
     const playerIndex = Object.keys(this.state.players).length
     const spawnPoints = this.map.spawnPoints
     const spawn = spawnPoints[playerIndex % spawnPoints.length]
+
+    const moveDuration = isBot
+      ? (botSpeed ?? BOT_SPEEDS[Math.floor(Math.random() * BOT_SPEEDS.length)])
+      : MOVE_DURATION
 
     const player: PlayerState = {
       id: socketId,
@@ -61,6 +66,7 @@ export class GameRoom {
       direction: 'idle',
       isMoving: false,
       moveProgress: 1,
+      moveDuration,
       fromTileX: spawn.x,
       fromTileY: spawn.y,
       carryingOrderId: null,
@@ -143,8 +149,8 @@ export class GameRoom {
     return this.state
   }
 
-  getLobbyPlayers(): Array<{ id: string; nickname: string }> {
-    return Object.values(this.state.players).map((p) => ({ id: p.id, nickname: p.nickname }))
+  getLobbyPlayers(): Array<{ id: string; nickname: string; isBot: boolean }> {
+    return Object.values(this.state.players).map((p) => ({ id: p.id, nickname: p.nickname, isBot: p.isBot }))
   }
 
   getMap(): MapData {
@@ -179,7 +185,7 @@ export class GameRoom {
           this.tryStartMove(player, now)
         } else {
           const start = this.moveStart.get(player.id) ?? now
-          player.moveProgress = Math.min(1, (now - start) / MOVE_DURATION)
+          player.moveProgress = Math.min(1, (now - start) / player.moveDuration)
         }
       } else {
         this.tryStartMove(player, now)
@@ -207,7 +213,7 @@ export class GameRoom {
         player.tileX = toX
         player.tileY = toY
         this.moveStart.set(player.id, now)
-        this.moveTimers.set(player.id, now + MOVE_DURATION)
+        this.moveTimers.set(player.id, now + player.moveDuration)
       }
     }
     // Keep direction in queue for next tick (chaining or retry after block)
@@ -327,6 +333,12 @@ export class GameRoom {
 
   forceResetToLobby(): void {
     this.clearAllTimers()
+
+    // Remove all players — everyone must press Ready again
+    for (const player of Object.values(this.state.players)) {
+      if (player.isBot) this.botController.removeBot(player.id)
+    }
+    this.state.players = {}
     this.state.orders = {}
     this.state.tick = 0
     this.state.sessionTimeLeft = 0
@@ -336,22 +348,8 @@ export class GameRoom {
     this.moveStart.clear()
     this.deliveryCount.clear()
 
-    // Reset player scores and positions
-    const spawnPoints = this.map.spawnPoints
-    let i = 0
-    for (const player of Object.values(this.state.players)) {
-      const spawn = spawnPoints[i % spawnPoints.length]
-      player.score = 0
-      player.tileX = spawn.x
-      player.tileY = spawn.y
-      player.fromTileX = spawn.x
-      player.fromTileY = spawn.y
-      player.isMoving = false
-      player.moveProgress = 1
-      player.carryingOrderId = null
-      i++
-    }
-
-    this.io.to(this.roomId).emit('lobby:update', { players: this.getLobbyPlayers() })
+    // Emit empty lobby, then kick all sockets from the room
+    this.io.to(this.roomId).emit('lobby:update', { players: [] })
+    this.io.in(this.roomId).socketsLeave(this.roomId)
   }
 }

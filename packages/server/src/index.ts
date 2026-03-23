@@ -4,6 +4,7 @@ import { Server } from 'socket.io'
 import path from 'path'
 import { GameRoom } from './game/GameRoom'
 import { generateId } from './game/IdGenerator'
+import { BOT_SPEEDS } from '@delivery-city/shared'
 
 const app = express()
 const httpServer = createServer(app)
@@ -38,15 +39,22 @@ io.on('connection', (socket) => {
     }
   })
 
+  socket.on('player:leave', () => {
+    room.removePlayer(socket.id)
+    io.to('main').emit('lobby:update', { players: room.getLobbyPlayers() })
+    socket.leave('main')
+  })
+
   socket.on('player:input', ({ direction }) => {
     room.processInput(socket.id, direction)
   })
 
-  socket.on('bot:add', () => {
+  socket.on('bot:add', ({ difficulty }) => {
     if (room.getState().phase !== 'lobby') return
     const botId = generateId('bot')
     const botNum = Object.values(room.getState().players).filter(p => p.isBot).length + 1
-    room.addPlayer(botId, `Bot_${botNum}`, true)
+    const speedMap: Record<string, number> = { slow: BOT_SPEEDS[0], medium: BOT_SPEEDS[1], fast: BOT_SPEEDS[2] }
+    room.addPlayer(botId, `Bot_${botNum}`, true, speedMap[difficulty] ?? BOT_SPEEDS[1])
     io.to('main').emit('lobby:update', { players: room.getLobbyPlayers() })
   })
 
@@ -60,16 +68,9 @@ io.on('connection', (socket) => {
   })
 
   socket.on('session:start', () => {
-    if (room.getState().phase === 'lobby') {
-      room.startSession()
-      io.to('main').emit('game:start', { map: room.getMap(), state: room.getState() })
-    }
-    // If in results phase, reset immediately and start
-    else if (room.getState().phase === 'results') {
-      room.forceResetToLobby()
-      room.startSession()
-      io.to('main').emit('game:start', { map: room.getMap(), state: room.getState() })
-    }
+    if (room.getState().phase !== 'lobby') return
+    room.startSession()
+    io.to('main').emit('game:start', { map: room.getMap(), state: room.getState() })
   })
 
   socket.on('disconnect', () => {
