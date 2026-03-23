@@ -52,6 +52,12 @@ export class GameScene extends Phaser.Scene {
   private lastTickAt = 0
   private inputTimer = 0
 
+  // Touch joystick
+  private joystickGfx!: Phaser.GameObjects.Graphics
+  private joystickPointer: Phaser.Input.Pointer | null = null
+  private joystickCenter: { x: number; y: number } | null = null
+  private touchDirection: Direction = 'idle'
+
   constructor() {
     super({ key: 'GameScene' })
   }
@@ -126,6 +132,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.createHUD()
+    this.setupJoystick()
 
     // Two-camera setup: main camera zooms with the world; hudCamera is fixed (no zoom/scroll)
     const { width, height } = this.scale
@@ -751,11 +758,99 @@ export class GameScene extends Phaser.Scene {
     const plusObjs  = makeZoomBtn(height / 2 - R - 6, '+', 1.2)
     const minusObjs = makeZoomBtn(height / 2 + R + 6, '−', 1 / 1.2)
 
+    this.joystickGfx = this.add.graphics().setScrollFactor(0).setDepth(300)
+
     this.hudObjects.push(
       this.hudTimer, this.hudScores, this.hudMyScore,
       this.hudOrderTimer, this.hudNavArrow, this.hudNavDist,
       ...plusObjs, ...minusObjs,
+      this.joystickGfx,
     )
+  }
+
+  // ── Touch joystick ───────────────────────────────────────────────────
+
+  private setupJoystick(): void {
+    const BASE_R  = 72
+    const KNOB_R  = 28
+    const DEAD_R  = 14
+
+    const draw = (cx: number, cy: number, kx: number, ky: number, dir: Direction) => {
+      const g = this.joystickGfx
+      g.clear()
+
+      // Base
+      g.fillStyle(0x000000, 0.30)
+      g.fillCircle(cx, cy, BASE_R)
+      g.lineStyle(1.5, 0xffffff, 0.18)
+      g.strokeCircle(cx, cy, BASE_R)
+
+      // Direction highlight arc
+      if (dir !== 'idle') {
+        const angles: Record<Direction, number> = { right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2, idle: 0 }
+        const a = angles[dir]
+        g.lineStyle(3, 0x44ccff, 0.6)
+        g.beginPath()
+        g.arc(cx, cy, BASE_R - 6, a - 0.55, a + 0.55, false)
+        g.strokePath()
+      }
+
+      // Knob
+      g.fillStyle(0xffffff, 0.82)
+      g.fillCircle(kx, ky, KNOB_R)
+      g.lineStyle(2, 0x44ccff, 1)
+      g.strokeCircle(kx, ky, KNOB_R)
+    }
+
+    this.input.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
+      if (ptr.rightButtonDown() || this.joystickPointer) return
+      this.joystickPointer = ptr
+      this.joystickCenter  = { x: ptr.x, y: ptr.y }
+      this.cameraFollowing = true
+      draw(ptr.x, ptr.y, ptr.x, ptr.y, 'idle')
+    })
+
+    this.input.on('pointermove', (ptr: Phaser.Input.Pointer) => {
+      if (ptr !== this.joystickPointer || !this.joystickCenter) return
+      const { x: cx, y: cy } = this.joystickCenter
+      const dx = ptr.x - cx
+      const dy = ptr.y - cy
+      const dist = Math.hypot(dx, dy)
+      const norm = dist > 0 ? 1 / dist : 0
+      const clamp = Math.min(dist, BASE_R)
+      const kx = cx + dx * norm * clamp
+      const ky = cy + dy * norm * clamp
+
+      if (dist > DEAD_R) {
+        const a = Math.atan2(dy, dx)          // -π … π
+        const Q = Math.PI / 4
+        if (a > -Q && a <= Q)           this.touchDirection = 'right'
+        else if (a > Q && a <= 3 * Q)   this.touchDirection = 'down'
+        else if (a > -3 * Q && a <= -Q) this.touchDirection = 'up'
+        else                             this.touchDirection = 'left'
+      } else {
+        this.touchDirection = 'idle'
+      }
+
+      draw(cx, cy, kx, ky, this.touchDirection)
+    })
+
+    this.input.on('pointerup', (ptr: Phaser.Input.Pointer) => {
+      if (ptr !== this.joystickPointer) return
+      this.joystickPointer = null
+      this.joystickCenter  = null
+      this.touchDirection  = 'idle'
+      this.joystickGfx.clear()
+    })
+
+    // Safety: if pointer is cancelled (e.g. phone call)
+    this.input.on('pointercancel', (ptr: Phaser.Input.Pointer) => {
+      if (ptr !== this.joystickPointer) return
+      this.joystickPointer = null
+      this.joystickCenter  = null
+      this.touchDirection  = 'idle'
+      this.joystickGfx.clear()
+    })
   }
 
   private updateHUD(): void {
@@ -919,6 +1014,7 @@ export class GameScene extends Phaser.Scene {
     else if (down) direction = 'down'
     else if (left) direction = 'left'
     else if (right) direction = 'right'
+    else if (this.touchDirection !== 'idle') direction = this.touchDirection
 
     if (direction !== 'idle') this.cameraFollowing = true
 
