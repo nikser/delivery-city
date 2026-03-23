@@ -10,7 +10,10 @@ interface BotState {
   carryingOrderId: string | null
   lastTileX: number
   lastTileY: number
-  blockedTicks: number
+  lastMoveTime: number
+  // Tile temporarily avoided after getting stuck (expires at avoidUntil)
+  avoidTile: { x: number; y: number } | null
+  avoidUntil: number
 }
 
 export class BotController {
@@ -35,7 +38,9 @@ export class BotController {
       carryingOrderId: null,
       lastTileX: -1,
       lastTileY: -1,
-      blockedTicks: 0,
+      lastMoveTime: Date.now(),
+      avoidTile: null,
+      avoidUntil: 0,
     })
   }
 
@@ -55,24 +60,36 @@ export class BotController {
       const player = players[id]
       if (!player) continue
 
-      // Пересчёт пути только когда остановились и путь кончился или сменился заказ
-      if (!player.isMoving) {
-        const orderChanged = player.carryingOrderId !== botState.carryingOrderId
+      // Track last tile change time
+      if (player.tileX !== botState.lastTileX || player.tileY !== botState.lastTileY) {
+        botState.lastTileX = player.tileX
+        botState.lastTileY = player.tileY
+        botState.lastMoveTime = now
+      }
 
-        // Определяем застревание: бот стоит на месте несколько тиков подряд
-        if (player.tileX === botState.lastTileX && player.tileY === botState.lastTileY) {
-          botState.blockedTicks++
-        } else {
-          botState.blockedTicks = 0
-          botState.lastTileX = player.tileX
-          botState.lastTileY = player.tileY
+      const orderChanged = player.carryingOrderId !== botState.carryingOrderId
+      const stuck = !player.isMoving && (now - botState.lastMoveTime) > 2000
+
+      if (!player.isMoving) {
+        if (stuck) {
+          // Mark the immediately blocked tile as temporarily avoided so A* picks a detour
+          if (botState.path.length > 0) {
+            botState.avoidTile = botState.path[0]
+            botState.avoidUntil = now + 4000
+          }
+          botState.lastMoveTime = now
+          botState.path = []
         }
 
-        if (botState.path.length === 0 || orderChanged || botState.blockedTicks > 3) {
-          if (botState.blockedTicks > 3) botState.blockedTicks = 0
+        if (botState.path.length === 0 || orderChanged) {
           botState.carryingOrderId = player.carryingOrderId
           this.updateBotState(id, botState, player, orders)
         }
+      }
+
+      // Expire avoid tile
+      if (botState.avoidTile && now >= botState.avoidUntil) {
+        botState.avoidTile = null
       }
 
       // Сдвигаем путь пока текущий тайл (включая destination при движении) уже пройден
@@ -105,6 +122,8 @@ export class BotController {
     player: PlayerState,
     orders: Record<string, OrderState>
   ): void {
+    const avoid = botState.avoidTile ?? undefined
+
     if (player.carryingOrderId) {
       // Несём заказ → идём на доставку
       const order = orders[player.carryingOrderId]
@@ -112,7 +131,8 @@ export class BotController {
         botState.phase = 'moving_to_delivery'
         botState.path = this.findPath(
           { x: player.tileX, y: player.tileY },
-          order.deliveryTile
+          order.deliveryTile,
+          avoid
         )
       }
     } else {
@@ -120,7 +140,7 @@ export class BotController {
       const available = Object.values(orders).filter(o => o.status === 'available')
       if (available.length === 0) {
         botState.phase = 'idle'
-        this.wanderToRandom(botState, player)
+        this.wanderToRandom(botState, player, avoid)
         return
       }
 
@@ -129,7 +149,8 @@ export class BotController {
       for (const order of available) {
         const path = this.findPath(
           { x: player.tileX, y: player.tileY },
-          order.pickupTile
+          order.pickupTile,
+          avoid
         )
         if (path.length > 0 && (!best || path.length < best.path.length)) {
           best = { order, path }
@@ -142,7 +163,7 @@ export class BotController {
         botState.path = best.path
       } else {
         // Заказы есть, но недостижимы — блуждаем
-        this.wanderToRandom(botState, player)
+        this.wanderToRandom(botState, player, avoid)
       }
     }
   }
@@ -150,10 +171,12 @@ export class BotController {
   // A* по тайловой карте с учётом направлений дорог
   private findPath(
     from: { x: number; y: number },
-    to: { x: number; y: number }
+    to: { x: number; y: number },
+    avoid?: { x: number; y: number }
   ): Array<{ x: number; y: number }> {
     const key = (x: number, y: number) => `${x},${y}`
     const h = (x: number, y: number) => Math.abs(x - to.x) + Math.abs(y - to.y)
+    const avoidKey = avoid ? key(avoid.x, avoid.y) : null
 
     // open: [f, g, x, y, prevKey]
     type Node = { f: number; g: number; x: number; y: number }
@@ -204,6 +227,7 @@ export class BotController {
 
         const nk = key(nx, ny)
         if (closed.has(nk)) continue
+        if (nk === avoidKey) continue
 
         const ng = g + 1
         const existing = open.get(nk)
@@ -228,14 +252,13 @@ export class BotController {
     return null
   }
 
-  private wanderToRandom(botState: BotState, player: PlayerState): void {
+  private wanderToRandom(botState: BotState, player: PlayerState, avoid?: { x: number; y: number }): void {
     if (this.intersections.length === 0) return
-    // Выбираем случайный перекрёсток, не совпадающий с текущей позицией
     const candidates = this.intersections.filter(
       i => i.x !== player.tileX || i.y !== player.tileY
     )
     const target = candidates[Math.floor(Math.random() * candidates.length)]
-    botState.path = this.findPath({ x: player.tileX, y: player.tileY }, target)
+    botState.path = this.findPath({ x: player.tileX, y: player.tileY }, target, avoid)
   }
 
   hasBot(id: string): boolean {
