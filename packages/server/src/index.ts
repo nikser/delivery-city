@@ -1,3 +1,13 @@
+import * as Sentry from '@sentry/node'
+
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV ?? 'development',
+    tracesSampleRate: 0.2,
+  })
+}
+
 import express from 'express'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
@@ -64,6 +74,7 @@ function leaveCurrentRoom(socketId: string): void {
 
 io.on('connection', (socket) => {
   console.log('connected:', socket.id)
+  if (process.env.SENTRY_DSN) Sentry.addBreadcrumb({ category: 'socket', message: 'client connected', data: { id: socket.id } })
 
   socket.on('room:create', () => {
     const prevCode = socketRooms.get(socket.id)
@@ -172,6 +183,19 @@ io.on('connection', (socket) => {
     if (!room || room.getState().phase !== 'lobby') return
     if (!room.getState().players[socket.id]) return
     room.startSession()
+    if (process.env.SENTRY_DSN) {
+      const state = room.getState()
+      const players = Object.values(state.players)
+      Sentry.captureEvent({
+        message: 'game_session_started',
+        level: 'info',
+        extra: {
+          roomCode: code,
+          playerCount: players.filter(p => !p.isBot).length,
+          botCount: players.filter(p => p.isBot).length,
+        },
+      })
+    }
     io.to(code).emit('game:start', { map: room.getMap(), state: room.getState() })
   })
 
@@ -189,6 +213,17 @@ io.on('connection', (socket) => {
     }
     socketRooms.delete(socket.id)
   })
+})
+
+// Sentry error handler must be registered after routes
+if (process.env.SENTRY_DSN) {
+  app.use(Sentry.expressErrorHandler())
+}
+
+// Catch unhandled promise rejections
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection:', reason)
+  if (process.env.SENTRY_DSN) Sentry.captureException(reason)
 })
 
 const PORT = process.env.PORT || 3001

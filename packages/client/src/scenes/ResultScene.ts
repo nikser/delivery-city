@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { getSocket } from '../network/SocketClient'
 import { t } from '../i18n'
 import { addLangSwitcher } from '../ui/LangSwitcher'
+import { trackSceneEnter } from '../telemetry'
 
 interface ResultEntry {
   id: string
@@ -22,6 +23,7 @@ export class ResultScene extends Phaser.Scene {
   }
 
   create(): void {
+    trackSceneEnter('ResultScene')
     const { width, height } = this.scale
     const results = this.results
 

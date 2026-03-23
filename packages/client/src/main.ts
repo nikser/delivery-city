@@ -1,3 +1,6 @@
+import { initSentry } from './telemetry'
+initSentry()
+
 import Phaser from 'phaser'
 import { WelcomeScene } from './scenes/WelcomeScene'
 import { LobbyScene } from './scenes/LobbyScene'

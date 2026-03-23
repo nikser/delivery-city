@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { getSocket } from '../network/SocketClient'
 import { t } from '../i18n'
 import { addLangSwitcher } from '../ui/LangSwitcher'
+import { trackSceneEnter, trackSceneLeave, trackRoomCreated, trackRoomJoined } from '../telemetry'
 
 export class WelcomeScene extends Phaser.Scene {
   private codeInput!: HTMLInputElement
@@ -12,6 +13,7 @@ export class WelcomeScene extends Phaser.Scene {
   }
 
   create(): void {
+    trackSceneEnter('WelcomeScene')
     const { width, height } = this.scale
 
     // Title
@@ -114,12 +116,16 @@ export class WelcomeScene extends Phaser.Scene {
     const socket = getSocket()
 
     socket.on('room:created', ({ code, players, difficulty }) => {
+      trackRoomCreated()
+      trackSceneLeave('WelcomeScene')
       sessionStorage.setItem('roomCode', code)
       this.cleanup()
       this.scene.start('LobbyScene', { code, players, difficulty })
     })
 
     socket.on('room:joined', ({ code, players, difficulty, phase }) => {
+      trackRoomJoined()
+      trackSceneLeave('WelcomeScene')
       sessionStorage.setItem('roomCode', code)
       this.cleanup()
       this.scene.start('LobbyScene', { code, players, difficulty, phase })

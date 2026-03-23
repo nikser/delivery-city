@@ -3,6 +3,7 @@ import { getSocket } from '../network/SocketClient'
 import type { MapData, GameState, PlayerState, OrderState, Direction, TileType } from '@delivery-city/shared'
 import { TILE_SIZE, MOVE_DURATION } from '@delivery-city/shared'
 import { t } from '../i18n'
+import { trackSceneEnter, trackSceneLeave, trackGameStart, trackGameEnd, trackDelivery } from '../telemetry'
 
 interface PlayerRender {
   graphics: Phaser.GameObjects.Graphics
@@ -81,6 +82,13 @@ export class GameScene extends Phaser.Scene {
   private _initState!: GameState
 
   create(): void {
+    trackSceneEnter('GameScene')
+    const players = Object.values(this._initState.players)
+    trackGameStart(
+      players.filter(p => !p.isBot).length,
+      players.filter(p =>  p.isBot).length,
+    )
+
     const mapPixels = this.mapData.width * TILE_SIZE
     this.cameras.main.setBounds(0, 0, mapPixels, mapPixels)
     this.cameras.main.setZoom(this.cameraZoom)
@@ -212,6 +220,7 @@ export class GameScene extends Phaser.Scene {
       this.removeOrderMarker(data.orderId)
       if (data.playerId === this.myId) {
         this.showScorePopup(data.score + data.bonusScore)
+        trackDelivery(data.score, data.bonusScore)
       }
     })
 
@@ -224,6 +233,10 @@ export class GameScene extends Phaser.Scene {
     })
 
     socket.on('session:end', (data) => {
+      const myResult = data.results.find(r => r.id === getSocket().id)
+      const place = myResult ? data.results.indexOf(myResult) + 1 : 0
+      trackGameEnd(myResult?.score ?? 0, place, data.results.length)
+      trackSceneLeave('GameScene')
       this.cleanupSocket()
       this.scene.start('ResultScene', { results: data.results })
     })
