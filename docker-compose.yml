@@ -1,6 +1,7 @@
 services:
   app:
     build: .
+    image: nixerr/delivery-city:latest
     ports:
       - "3001:3001"
     restart: unless-stopped
