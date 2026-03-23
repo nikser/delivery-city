@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { getSocket } from '../network/SocketClient'
 import type { MapData, GameState, PlayerState, OrderState, Direction, TileType } from '@delivery-city/shared'
 import { TILE_SIZE, MOVE_DURATION } from '@delivery-city/shared'
+import { t } from '../i18n'
 
 interface PlayerRender {
   graphics: Phaser.GameObjects.Graphics
@@ -140,6 +141,18 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.ignore(this.hudObjects)
     this.hudCamera.ignore(this.worldObjects)
     this.hudCamera.ignore([this.followTarget])
+
+    const roomCode = sessionStorage.getItem('roomCode') ?? ''
+    if (roomCode) {
+      const roomCodeText = this.add.text(width / 2, 52, roomCode, {
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        color: '#44ccff',
+        stroke: '#000000',
+        strokeThickness: 2,
+      }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(200)
+      this.cameras.main.ignore(roomCodeText)
+    }
 
     // Identify self
     const socket = getSocket()
@@ -679,16 +692,6 @@ export class GameScene extends Phaser.Scene {
       strokeThickness: 3,
     }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(200)
 
-    const roomCode = sessionStorage.getItem('roomCode') ?? ''
-    if (roomCode) {
-      this.add.text(width / 2, 52, roomCode, {
-        fontFamily: 'monospace',
-        fontSize: '14px',
-        color: '#44ccff',
-        stroke: '#000000',
-        strokeThickness: 2,
-      }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(200)
-    }
 
     this.hudScores = this.add.text(width - 14, 14, '', {
       fontFamily: 'monospace',
@@ -699,7 +702,7 @@ export class GameScene extends Phaser.Scene {
       align: 'right',
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(200)
 
-    this.hudMyScore = this.add.text(width / 2, height - 14, 'Очки: 0', {
+    this.hudMyScore = this.add.text(width / 2, height - 14, `${t('score')}: 0`, {
       fontFamily: 'monospace',
       fontSize: '28px',
       color: '#ffdd00',
@@ -874,7 +877,7 @@ export class GameScene extends Phaser.Scene {
     // My score
     const myRender = this.playerRenders.get(this.myId)
     if (myRender) {
-      this.hudMyScore.setText(`Очки: ${myRender.state.score}`)
+      this.hudMyScore.setText(`${t('score')}: ${myRender.state.score}`)
     }
 
     // Carried order countdown
@@ -883,7 +886,7 @@ export class GameScene extends Phaser.Scene {
       const orderRender = this.orderRenders.get(orderId)
       if (orderRender) {
         const timeLeft = Math.max(0, Math.ceil((orderRender.state.expiresAt - Date.now()) / 1000))
-        this.hudOrderTimer.setText(`Доставь за: ${timeLeft}s`)
+        this.hudOrderTimer.setText(`${t('deliverIn')}: ${timeLeft}s`)
         this.hudOrderTimer.setColor(timeLeft < 10 ? '#ff0000' : '#ff8844')
       }
     } else {
@@ -910,7 +913,7 @@ export class GameScene extends Phaser.Scene {
       destPx = dest.x * TILE_SIZE + TILE_SIZE / 2
       destPy = dest.y * TILE_SIZE + TILE_SIZE / 2
       arrowColor = 0xff3333
-      label = 'доставка'
+      label = t('delivery')
     } else {
       // No order — draw 3 arrows to nearest available pickups
       const available = Array.from(this.orderRenders.values())
@@ -957,7 +960,7 @@ export class GameScene extends Phaser.Scene {
       })
 
       const distTiles = Math.round(available[0].dist / TILE_SIZE)
-      this.hudNavDist.setPosition(cx, cy + R + 10).setText(`${distTiles}т · заказ`)
+      this.hudNavDist.setPosition(cx, cy + R + 10).setText(`${distTiles}${t('tileUnit')} · ${t('order')}`)
       return
     }
 
@@ -998,7 +1001,7 @@ export class GameScene extends Phaser.Scene {
       tipX + Math.cos(angle - Math.PI * 0.75) * headSize, tipY + Math.sin(angle - Math.PI * 0.75) * headSize,
     )
 
-    this.hudNavDist.setPosition(cx, cy + R + 10).setText(`${distTiles}т · ${label}`)
+    this.hudNavDist.setPosition(cx, cy + R + 10).setText(`${distTiles}${t('tileUnit')} · ${label}`)
   }
 
   // ── Input ────────────────────────────────────────────────────────────

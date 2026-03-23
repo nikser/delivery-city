@@ -1,5 +1,7 @@
 import Phaser from 'phaser'
 import { getSocket } from '../network/SocketClient'
+import { t } from '../i18n'
+import { addLangSwitcher } from '../ui/LangSwitcher'
 
 export class WelcomeScene extends Phaser.Scene {
   private codeInput!: HTMLInputElement
@@ -21,14 +23,14 @@ export class WelcomeScene extends Phaser.Scene {
       strokeThickness: 4,
     }).setOrigin(0.5)
 
-    this.add.text(width / 2, height * 0.23, 'Доставляй быстрее всех!', {
+    this.add.text(width / 2, height * 0.23, t('tagline'), {
       fontFamily: 'monospace',
       fontSize: '18px',
       color: '#aaaacc',
     }).setOrigin(0.5)
 
     // Create room button
-    const createBtn = this.add.text(width / 2, height * 0.34, '[ СОЗДАТЬ КОМНАТУ ]', {
+    const createBtn = this.add.text(width / 2, height * 0.34, t('createRoom'), {
       fontFamily: 'monospace',
       fontSize: '28px',
       color: '#00ff88',
@@ -41,14 +43,14 @@ export class WelcomeScene extends Phaser.Scene {
     createBtn.on('pointerdown', () => getSocket().emit('room:create'))
 
     // Divider
-    this.add.text(width / 2, height * 0.46, '— или —', {
+    this.add.text(width / 2, height * 0.46, t('or'), {
       fontFamily: 'monospace',
       fontSize: '16px',
       color: '#a8a8df',
     }).setOrigin(0.5)
 
     // Code input label
-    this.add.text(width / 2, height * 0.57, 'Введи код комнаты:', {
+    this.add.text(width / 2, height * 0.57, t('enterCode'), {
       fontFamily: 'monospace',
       fontSize: '18px',
       color: '#aaaacc',
@@ -84,7 +86,7 @@ export class WelcomeScene extends Phaser.Scene {
     })
 
     // Join button
-    const joinBtn = this.add.text(width / 2, height * 0.73, '[ ВОЙТИ ]', {
+    const joinBtn = this.add.text(width / 2, height * 0.73, t('join'), {
       fontFamily: 'monospace',
       fontSize: '24px',
       color: '#ffaa00',
@@ -102,6 +104,12 @@ export class WelcomeScene extends Phaser.Scene {
       fontSize: '16px',
       color: '#ff4444',
     }).setOrigin(0.5)
+
+    // Language switcher
+    addLangSwitcher(this, () => {
+      this.cleanup()
+      this.scene.restart()
+    })
 
     const socket = getSocket()
 
@@ -141,7 +149,7 @@ export class WelcomeScene extends Phaser.Scene {
   private handleJoin(): void {
     const code = this.codeInput.value.trim().toUpperCase()
     if (code.length < 4) {
-      this.errorText.setText('Введи 4-значный код')
+      this.errorText.setText(t('invalidCode'))
       return
     }
     this.errorText.setText('')

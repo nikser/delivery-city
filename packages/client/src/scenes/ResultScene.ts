@@ -1,5 +1,7 @@
 import Phaser from 'phaser'
 import { getSocket } from '../network/SocketClient'
+import { t } from '../i18n'
+import { addLangSwitcher } from '../ui/LangSwitcher'
 
 interface ResultEntry {
   id: string
@@ -24,7 +26,7 @@ export class ResultScene extends Phaser.Scene {
     const results = this.results
 
     // Title
-    this.add.text(width / 2, height * 0.08, 'РАУНД ЗАВЕРШЁН', {
+    this.add.text(width / 2, height * 0.08, t('roundEnd'), {
       fontFamily: 'monospace',
       fontSize: '48px',
       color: '#ffdd00',
@@ -47,10 +49,10 @@ export class ResultScene extends Phaser.Scene {
       color: '#888899',
     }
 
-    this.add.text(cols.place, tableTop, 'Место', headerStyle).setOrigin(0.5)
-    this.add.text(cols.nick, tableTop, 'Игрок', headerStyle).setOrigin(0.5)
-    this.add.text(cols.deliveries, tableTop, 'Доставок', headerStyle).setOrigin(0.5)
-    this.add.text(cols.score, tableTop, 'Очки', headerStyle).setOrigin(0.5)
+    this.add.text(cols.place, tableTop, t('place'), headerStyle).setOrigin(0.5)
+    this.add.text(cols.nick, tableTop, t('playerCol'), headerStyle).setOrigin(0.5)
+    this.add.text(cols.deliveries, tableTop, t('deliveriesCol'), headerStyle).setOrigin(0.5)
+    this.add.text(cols.score, tableTop, t('scoreCol'), headerStyle).setOrigin(0.5)
 
     const lineG = this.add.graphics()
     lineG.lineStyle(1, 0x4444aa)
@@ -89,14 +91,14 @@ export class ResultScene extends Phaser.Scene {
       const newBest = Math.max(myResult.score, prevBest)
       localStorage.setItem('bestScore', String(newBest))
 
-      this.add.text(width / 2, height * 0.78, `Мой результат: ${myResult.score} очков`, {
+      this.add.text(width / 2, height * 0.78, `${t('myScore')}: ${myResult.score} ${t('pts')}`, {
         fontFamily: 'monospace',
         fontSize: '20px',
         color: '#aaaaff',
       }).setOrigin(0.5)
 
       const isNewBest = myResult.score > prevBest && myResult.score > 0
-      this.add.text(width / 2, height * 0.84, `Лучший результат: ${newBest}${isNewBest ? ' 🏆' : ''}`, {
+      this.add.text(width / 2, height * 0.84, `${t('bestScore')}: ${newBest}${isNewBest ? ' 🏆' : ''}`, {
         fontFamily: 'monospace',
         fontSize: '18px',
         color: '#ffaa00',
@@ -104,7 +106,7 @@ export class ResultScene extends Phaser.Scene {
     }
 
     // Play again button
-    const playBtn = this.add.text(width / 2, height * 0.93, '[ ИГРАТЬ СНОВА ]', {
+    const playBtn = this.add.text(width / 2, height * 0.93, t('playAgain'), {
       fontFamily: 'monospace',
       fontSize: '28px',
       color: '#00ff88',
@@ -122,5 +124,7 @@ export class ResultScene extends Phaser.Scene {
         this.scene.start('WelcomeScene')
       }
     })
+
+    addLangSwitcher(this, () => this.scene.restart())
   }
 }

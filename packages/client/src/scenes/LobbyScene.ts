@@ -1,5 +1,7 @@
 import Phaser from 'phaser'
 import { getSocket } from '../network/SocketClient'
+import { t } from '../i18n'
+import { addLangSwitcher } from '../ui/LangSwitcher'
 
 export class LobbyScene extends Phaser.Scene {
   private nicknameInput!: HTMLInputElement
@@ -26,7 +28,7 @@ export class LobbyScene extends Phaser.Scene {
     const { width, height } = this.scale
 
     // Back button (top-left)
-    const backBtn = this.add.text(24, 18, '← назад', {
+    const backBtn = this.add.text(24, 18, t('back'), {
       fontFamily: 'monospace',
       fontSize: '16px',
       color: '#6666aa',
@@ -40,7 +42,7 @@ export class LobbyScene extends Phaser.Scene {
 
     // Room code display (top-right)
     if (this.roomCode) {
-      const codeLabel = this.add.text(width - 16, 18, `КОД КОМНАТЫ:`, {
+      const codeLabel = this.add.text(width - 16, 18, t('roomCodeLabel'), {
         fontFamily: 'monospace',
         fontSize: '12px',
         color: '#555577',
@@ -58,7 +60,7 @@ export class LobbyScene extends Phaser.Scene {
       codeText.on('pointerout', () => codeText.setColor('#44ccff'))
       codeText.on('pointerdown', () => {
         navigator.clipboard?.writeText(this.roomCode)
-        codeText.setText('скопировано!')
+        codeText.setText(t('copied'))
         this.time.delayedCall(1500, () => codeText.setText(this.roomCode))
       })
     }
@@ -72,7 +74,7 @@ export class LobbyScene extends Phaser.Scene {
       strokeThickness: 4,
     }).setOrigin(0.5)
 
-    this.add.text(width / 2, height * 0.16, 'Доставляй быстрее всех!', {
+    this.add.text(width / 2, height * 0.16, t('tagline'), {
       fontFamily: 'monospace',
       fontSize: '18px',
       color: '#aaaacc',
@@ -84,7 +86,7 @@ export class LobbyScene extends Phaser.Scene {
     }
 
     // Nickname label
-    this.add.text(width / 2, height * 0.23, 'Введи ник:', {
+    this.add.text(width / 2, height * 0.23, t('enterNick'), {
       fontFamily: 'monospace',
       fontSize: '20px',
       color: '#ffffff',
@@ -93,7 +95,7 @@ export class LobbyScene extends Phaser.Scene {
     // HTML input element
     this.nicknameInput = document.createElement('input')
     this.nicknameInput.type = 'text'
-    this.nicknameInput.placeholder = 'Твой ник...'
+    this.nicknameInput.placeholder = t('nickPlaceholder')
     this.nicknameInput.maxLength = 16
     this.nicknameInput.value = localStorage.getItem('nickname') || ''
     Object.assign(this.nicknameInput.style, {
@@ -126,7 +128,7 @@ export class LobbyScene extends Phaser.Scene {
 
     // Ready button
     let joined = false
-    const playBtn = this.add.text(width / 2, height * 0.39, '[ ГОТОВ ]', {
+    const playBtn = this.add.text(width / 2, height * 0.39, t('ready'), {
       fontFamily: 'monospace',
       fontSize: '32px',
       color: '#00ff88',
@@ -135,7 +137,7 @@ export class LobbyScene extends Phaser.Scene {
     }).setOrigin(0.5).setInteractive({ useHandCursor: true })
 
     // Start session button
-    const startBtn = this.add.text(width / 2, height * 0.49, '[ НАЧАТЬ ИГРУ ]', {
+    const startBtn = this.add.text(width / 2, height * 0.49, t('startGame'), {
       fontFamily: 'monospace',
       fontSize: '24px',
       color: '#ffaa00',
@@ -146,9 +148,9 @@ export class LobbyScene extends Phaser.Scene {
     // Bot difficulty selector
     type Difficulty = 'slow' | 'medium' | 'fast'
     const difficulties: { key: Difficulty; label: string }[] = [
-      { key: 'slow',   label: 'МЕД' },
-      { key: 'medium', label: 'СР'  },
-      { key: 'fast',   label: 'БЫС' },
+      { key: 'slow',   label: t('slow')   },
+      { key: 'medium', label: t('medium') },
+      { key: 'fast',   label: t('fast')   },
     ]
     const diffBtns = difficulties.map(({ key, label }, i) => {
       const btn = this.add.text(width / 2 - 44 + i * 44, height * 0.645, label, {
@@ -177,7 +179,7 @@ export class LobbyScene extends Phaser.Scene {
     selectDifficulty(this.initialDifficulty)
 
     // Bot buttons — disabled until joined
-    const botAddBtn = this.add.text(width / 2 - 90, height * 0.57, '[ + БОТ ]', {
+    const botAddBtn = this.add.text(width / 2 - 90, height * 0.57, t('addBot'), {
       fontFamily: 'monospace',
       fontSize: '20px',
       color: '#44ccff',
@@ -185,7 +187,7 @@ export class LobbyScene extends Phaser.Scene {
       padding: { x: 16, y: 8 },
     }).setOrigin(0.5)
 
-    const botRemoveBtn = this.add.text(width / 2 + 90, height * 0.57, '[ - БОТ ]', {
+    const botRemoveBtn = this.add.text(width / 2 + 90, height * 0.57, t('removeBot'), {
       fontFamily: 'monospace',
       fontSize: '20px',
       color: '#ff6644',
@@ -196,7 +198,7 @@ export class LobbyScene extends Phaser.Scene {
     const setJoined = (value: boolean) => {
       joined = value
       if (joined) {
-        playBtn.setText('[ отмена ]')
+        playBtn.setText(t('cancel'))
         playBtn.setFontSize('18px')
         playBtn.setColor('#888888')
         playBtn.setBackgroundColor('#1a1a1a')
@@ -209,7 +211,7 @@ export class LobbyScene extends Phaser.Scene {
         botRemoveBtn.setAlpha(1)
         diffBtns.forEach(({ btn }) => btn.setAlpha(1))
       } else {
-        playBtn.setText('[ ГОТОВ ]')
+        playBtn.setText(t('ready'))
         playBtn.setFontSize('32px')
         playBtn.setColor('#00ff88')
         playBtn.setBackgroundColor('#002244')
@@ -269,7 +271,7 @@ export class LobbyScene extends Phaser.Scene {
     tableBg.lineStyle(1, 0x2a2a5a, 1)
     tableBg.lineBetween(tableX - TABLE_W / 2 + 8, tableY - 4, tableX + TABLE_W / 2 - 8, tableY - 4)
 
-    this.add.text(tableX - TABLE_W / 2 + 14, tableY - 22, '#   ИМЯ ИГРОКА          ТИП', {
+    this.add.text(tableX - TABLE_W / 2 + 14, tableY - 22, t('tableHeader'), {
       fontFamily: 'monospace', fontSize: '12px', color: '#555577',
     })
 
@@ -282,6 +284,12 @@ export class LobbyScene extends Phaser.Scene {
 
     // Render initial player list (received before this scene was created)
     this.renderPlayerList(this.initialPlayers)
+
+    // Language switcher
+    addLangSwitcher(this, () => {
+      this.cleanup()
+      this.scene.restart()
+    })
 
     // Socket events
     const socket = getSocket()
@@ -315,7 +323,7 @@ export class LobbyScene extends Phaser.Scene {
   private handleJoin(): void {
     const nickname = this.nicknameInput.value.trim() || 'Player'
     localStorage.setItem('nickname', nickname)
-    this.statusText.setText(`Подключаемся как ${nickname}...`)
+    this.statusText.setText(`${t('connecting')} ${nickname}...`)
     getSocket().emit('player:join', { nickname })
   }
 
@@ -327,13 +335,13 @@ export class LobbyScene extends Phaser.Scene {
   }
 
   private createMidGameJoinUI(width: number, height: number): void {
-    this.add.text(width / 2, height * 0.36, '🎮 Игра уже идёт!', {
+    this.add.text(width / 2, height * 0.36, t('midGameTitle'), {
       fontFamily: 'monospace',
       fontSize: '28px',
       color: '#ffaa00',
     }).setOrigin(0.5)
 
-    this.add.text(width / 2, height * 0.46, 'Ты можешь подключиться прямо сейчас\nи сразу начать доставлять заказы.', {
+    this.add.text(width / 2, height * 0.46, t('midGameDesc'), {
       fontFamily: 'monospace',
       fontSize: '16px',
       color: '#aaaacc',
@@ -341,7 +349,7 @@ export class LobbyScene extends Phaser.Scene {
     }).setOrigin(0.5)
 
     // Nickname input
-    this.add.text(width / 2, height * 0.56, 'Введи ник:', {
+    this.add.text(width / 2, height * 0.56, t('enterNick'), {
       fontFamily: 'monospace',
       fontSize: '18px',
       color: '#ffffff',
@@ -349,7 +357,7 @@ export class LobbyScene extends Phaser.Scene {
 
     this.nicknameInput = document.createElement('input')
     this.nicknameInput.type = 'text'
-    this.nicknameInput.placeholder = 'Твой ник...'
+    this.nicknameInput.placeholder = t('nickPlaceholder')
     this.nicknameInput.maxLength = 16
     this.nicknameInput.value = localStorage.getItem('nickname') || ''
     Object.assign(this.nicknameInput.style, {
@@ -373,7 +381,7 @@ export class LobbyScene extends Phaser.Scene {
       if (e.key === 'Enter') this.handleMidGameJoin()
     })
 
-    const joinBtn = this.add.text(width / 2, height * 0.72, '[ ВОЙТИ В ИГРУ ]', {
+    const joinBtn = this.add.text(width / 2, height * 0.72, t('joinGame'), {
       fontFamily: 'monospace',
       fontSize: '28px',
       color: '#00ff88',
@@ -405,7 +413,7 @@ export class LobbyScene extends Phaser.Scene {
       if (p) {
         const nick = p.nickname.length > 16 ? p.nickname.slice(0, 15) + '…' : p.nickname
         const nickPad = nick.padEnd(17)
-        const type = p.isBot ? 'бот ' : 'игрок'
+        const type = p.isBot ? t('typeBot') : t('typeHuman')
         const color = p.isBot ? '#7799bb' : '#ccccff'
         this.playerListRows[i].setText(`${String(i + 1).padStart(2)}.  ${nickPad}${type}`)
         this.playerListRows[i].setColor(color)
