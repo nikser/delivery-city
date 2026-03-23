@@ -9,3 +9,5 @@ packages/*/dist
 .idea
 memory
 prompts
+docker-compose.yml
+Dockerfile

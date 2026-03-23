@@ -672,6 +672,17 @@ export class GameScene extends Phaser.Scene {
       strokeThickness: 3,
     }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(200)
 
+    const roomCode = sessionStorage.getItem('roomCode') ?? ''
+    if (roomCode) {
+      this.add.text(width / 2, 52, roomCode, {
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        color: '#44ccff',
+        stroke: '#000000',
+        strokeThickness: 2,
+      }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(200)
+    }
+
     this.hudScores = this.add.text(width - 14, 14, '', {
       fontFamily: 'monospace',
       fontSize: '15px',

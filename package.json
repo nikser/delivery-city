@@ -6,7 +6,9 @@
     "dev": "concurrently \"npm run dev -w packages/server\" \"npm run dev -w packages/client\"",
     "build": "npm run build -w packages/shared && npm run build -w packages/server && npm run build -w packages/client",
     "test": "npm run test -w packages/tests",
-    "build_docker": "docker build --platform=linux/amd64 -t nixerr/delivery-city:latest ."
+    "build:image": "docker build --platform=linux/amd64 -t nixerr/delivery-city:latest .",
+    "push:image": "docker push nixerr/delivery-city:latest",
+    "image:build:push": "npm run build:image && npm run push:image"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
