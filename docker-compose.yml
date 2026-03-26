@@ -8,3 +8,4 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
+      - GA_MEASUREMENT_ID

@@ -12,6 +12,7 @@ import express from 'express'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
 import path from 'path'
+import fs from 'fs'
 import { GameRoom } from './game/GameRoom'
 import { generateId } from './game/IdGenerator'
 import { BOT_SPEEDS, BotDifficulty } from '@delivery-city/shared'
@@ -21,7 +22,27 @@ const httpServer = createServer(app)
 const io = new Server(httpServer, { cors: { origin: '*' } })
 
 // Serve client static files (path relative to compiled dist/index.js)
-app.use(express.static(path.join(__dirname, '../../client/dist')))
+const clientDistPath = path.join(__dirname, '../../client/dist')
+app.use(express.static(clientDistPath))
+
+const gaId = process.env.GA_MEASUREMENT_ID
+let indexHtml = fs.readFileSync(path.join(clientDistPath, 'index.html'), 'utf-8')
+if (gaId) {
+  indexHtml = indexHtml.replace(
+    '</head>',
+    `  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=${gaId}"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '${gaId}');
+  </script>
+</head>`
+  )
+}
+
+app.get('*', (_req, res) => res.send(indexHtml))
 
 const rooms = new Map<string, GameRoom>()
 // Maps socketId → roomCode
