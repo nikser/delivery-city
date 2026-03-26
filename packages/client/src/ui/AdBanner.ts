@@ -1,13 +1,14 @@
-const STORAGE_KEY = 'ad_banner_closed'
+const STORAGE_KEY = 'ad_banner_closed';
+const BANNER_ID = 'ad-banner';
 
 export function showAdBanner(): void {
   // Don't show if dismissed in this session
   if (sessionStorage.getItem(STORAGE_KEY)) return
 
-  if (document.getElementById('ad-banner')) return
+  if (document.getElementById(BANNER_ID)) return
 
   const banner = document.createElement('div')
-  banner.id = 'ad-banner'
+  banner.id = BANNER_ID
   banner.innerHTML = `
     <div id="ad-banner-inner">
       <!-- ═══════════════════════════════════════════════════════════
@@ -105,7 +106,7 @@ export function showAdBanner(): void {
 }
 
 export function hideAdBanner(): void {
-  const banner = document.getElementById('ad-banner')
+  const banner = document.getElementById(BANNER_ID)
   if (banner) banner.remove()
   sessionStorage.setItem(STORAGE_KEY, '1')
 }

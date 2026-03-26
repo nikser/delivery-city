@@ -13,6 +13,7 @@ import { createServer } from 'http'
 import { Server } from 'socket.io'
 import path from 'path'
 import fs from 'fs'
+import fs from 'fs'
 import { GameRoom } from './game/GameRoom'
 import { generateId } from './game/IdGenerator'
 import { BOT_SPEEDS, BotDifficulty } from '@delivery-city/shared'
@@ -23,7 +24,7 @@ const io = new Server(httpServer, { cors: { origin: '*' } })
 
 // Serve client static files (path relative to compiled dist/index.js)
 const clientDistPath = path.join(__dirname, '../../client/dist')
-app.use(express.static(clientDistPath))
+app.use(express.static(clientDistPath, { index: false }))
 
 const gaId = process.env.GA_MEASUREMENT_ID
 let indexHtml = fs.readFileSync(path.join(clientDistPath, 'index.html'), 'utf-8')
