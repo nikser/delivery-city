@@ -13,8 +13,8 @@
     "socket.io-client": "^4.7.4"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "typescript": "^5.3.3",
-    "vite": "^5.0.12"
+    "concurrently": "^9.2.1",
+    "typescript": "^6.0.2",
+    "vite": "^8.0.2"
   }
 }
