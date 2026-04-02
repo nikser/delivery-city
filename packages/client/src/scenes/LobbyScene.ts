@@ -200,6 +200,10 @@ export class LobbyScene extends Phaser.Scene {
       if (joined) {
         ready.setLabel(t('cancel'))
         ready.setFilled(false)
+        ready.setDanger(true)
+        this.nicknameInput.disabled = true
+        this.nicknameInput.style.opacity = '0.45'
+        this.nicknameInput.style.cursor = 'default'
         start.container.setInteractive({ useHandCursor: true })
         botAdd.container.setInteractive({ useHandCursor: true })
         botRemove.container.setInteractive({ useHandCursor: true })
@@ -210,6 +214,10 @@ export class LobbyScene extends Phaser.Scene {
       } else {
         ready.setLabel(t('ready'))
         ready.setFilled(true)
+        ready.setDanger(false)
+        this.nicknameInput.disabled = false
+        this.nicknameInput.style.opacity = '1'
+        this.nicknameInput.style.cursor = ''
         start.container.disableInteractive()
         botAdd.container.disableInteractive()
         botRemove.container.disableInteractive()
@@ -255,6 +263,24 @@ export class LobbyScene extends Phaser.Scene {
       this.scene.restart()
     })
 
+    // How to play button — bottom-left
+    const helpBtn = this.add.text(16, height - 16, t('howToPlay'), {
+      fontFamily: 'monospace',
+      fontSize: '14px',
+      color: '#00ccaa',
+    }).setOrigin(0, 1).setInteractive({ useHandCursor: true }).setDepth(50)
+    helpBtn.on('pointerover', () => helpBtn.setColor('#ffffff'))
+    helpBtn.on('pointerout',  () => helpBtn.setColor('#00ccaa'))
+    helpBtn.on('pointerdown', () => {
+      this.nicknameInput.style.display = 'none'
+      this.scene.pause()
+      this.scene.launch('RulesScene', { caller: 'LobbyScene' })
+    })
+
+    this.events.on('resume', () => {
+      this.nicknameInput.style.display = ''
+    })
+
     const socket = getSocket()
 
     socket.on('lobby:update', (data) => {
@@ -268,7 +294,7 @@ export class LobbyScene extends Phaser.Scene {
     })
   }
 
-  private repositionInput(): void {
+  private repositionInput(yFraction = 0.265): void {
     const canvas = this.game.canvas
     const rect = canvas.getBoundingClientRect()
     const { width, height } = this.scale
@@ -276,7 +302,7 @@ export class LobbyScene extends Phaser.Scene {
 
     const inputWidth = 280 * scaleX
     const inputX = rect.left + (width / 2) * scaleX - inputWidth / 2
-    const inputY = rect.top + height * 0.265 * (rect.height / height)
+    const inputY = rect.top + height * yFraction * (rect.height / height)
 
     this.nicknameInput.style.left = `${inputX}px`
     this.nicknameInput.style.top = `${inputY}px`
@@ -346,14 +372,23 @@ export class LobbyScene extends Phaser.Scene {
       this.nicknameInput.style.boxShadow = 'none'
     })
     document.body.appendChild(this.nicknameInput)
-    this.repositionInput()
+    this.repositionInput(0.56)
+
+    const lockForm = () => {
+      this.nicknameInput.disabled = true
+      this.nicknameInput.style.opacity = '0.45'
+      this.nicknameInput.style.cursor = 'default'
+      joinBtn.container.disableInteractive()
+      joinBtn.container.setAlpha(0.45)
+    }
 
     this.nicknameInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') this.handleMidGameJoin()
+      if (e.key === 'Enter') { this.handleMidGameJoin(); lockForm() }
     })
 
-    createButton(this, width / 2, height * 0.68, t('joinGame'), true, () => {
+    const joinBtn = createButton(this, width / 2, height * 0.68, t('joinGame'), true, () => {
       this.handleMidGameJoin()
+      lockForm()
     })
 
     const socket = getSocket()

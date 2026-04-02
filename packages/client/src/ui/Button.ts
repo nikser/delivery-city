@@ -11,6 +11,7 @@ export interface ButtonHandle {
   container: Phaser.GameObjects.Container
   setLabel(label: string): void
   setFilled(filled: boolean): void
+  setDanger(danger: boolean): void
 }
 
 export function createButton(
@@ -22,7 +23,7 @@ export function createButton(
   onClick: () => void,
   opts: ButtonOptions = {},
 ): ButtonHandle {
-  const btnWidth = opts.width ?? 220
+  const btnWidth = opts.width ?? 240
   const btnHeight = opts.height ?? 50
   const fontSize = opts.fontSize ?? '22px'
   const borderColor = opts.danger ? 0xcc2244 : 0x00ccaa
@@ -31,15 +32,19 @@ export function createButton(
   const hoverColor = opts.danger ? 0x440022 : 0x005544
 
   let currentFilled = filled
+  let currentBorderColor = borderColor
+  let currentTextColor = textColor
+  let currentFillColor = fillColor
+  let currentHoverColor = hoverColor
 
   const bg = scene.add.graphics()
   const draw = (hover: boolean, isFilled = currentFilled) => {
     bg.clear()
-    bg.lineStyle(2, borderColor, 1)
+    bg.lineStyle(2, currentBorderColor, 1)
     bg.fillStyle(
       isFilled
-        ? (hover ? hoverColor : fillColor)
-        : (hover ? fillColor : 0x111a22),
+        ? (hover ? currentHoverColor : currentFillColor)
+        : (hover ? currentFillColor : 0x111a22),
       1,
     )
     bg.fillRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight)
@@ -58,7 +63,7 @@ export function createButton(
   container.setInteractive({ useHandCursor: true })
 
   container.on('pointerover', () => { draw(true); text.setColor('#ffffff') })
-  container.on('pointerout', () => { draw(false); text.setColor(textColor) })
+  container.on('pointerout', () => { draw(false); text.setColor(currentTextColor) })
   container.on('pointerdown', onClick)
 
   return {
@@ -66,6 +71,14 @@ export function createButton(
     setLabel: (newLabel: string) => text.setText(newLabel),
     setFilled: (newFilled: boolean) => {
       currentFilled = newFilled
+      draw(false)
+    },
+    setDanger: (isDanger: boolean) => {
+      currentBorderColor = isDanger ? 0xcc2244 : 0x00ccaa
+      currentTextColor   = isDanger ? '#ff4466' : '#00ff88'
+      currentFillColor   = isDanger ? 0x220011 : 0x003333
+      currentHoverColor  = isDanger ? 0x440022 : 0x005544
+      text.setColor(currentTextColor)
       draw(false)
     },
   }

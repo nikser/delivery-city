@@ -41,6 +41,25 @@ export class WelcomeScene extends Phaser.Scene {
       color: '#ffee88',
     }).setOrigin(0.5)
 
+    // How to play button — bottom-left
+    const helpBtn = this.add.text(16, height - 16, t('howToPlay'), {
+      fontFamily: 'monospace',
+      fontSize: '14px',
+      color: '#00ccaa',
+    }).setOrigin(0, 1).setInteractive({ useHandCursor: true })
+    helpBtn.on('pointerover', () => helpBtn.setColor('#ffffff'))
+    helpBtn.on('pointerout',  () => helpBtn.setColor('#00ccaa'))
+    helpBtn.on('pointerdown', () => {
+      this.codeInput.style.display = 'none'
+      this.scene.pause()
+      this.scene.launch('RulesScene')
+    })
+    helpBtn.setDepth(50)
+
+    this.events.on('resume', () => {
+      this.codeInput.style.display = ''
+    })
+
     // CREATE ROOM button — filled teal
     createButton(this, width / 2, height * 0.28, t('createRoom'), true, () => {
       getSocket().emit('room:create')

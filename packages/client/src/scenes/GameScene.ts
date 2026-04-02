@@ -323,20 +323,20 @@ export class GameScene extends Phaser.Scene {
         g.fillStyle(SIDEWALK)
         g.fillRect(px, py, S, SW)
         g.fillRect(px, py + S - SW, S, SW)
-        // Center dashes — soft off-white
-        g.fillStyle(0xe0d8a0, 0.45)
+        // Center dashes
+        g.fillStyle(0xe0d8a0, 0.35)
         for (let i = 0; i < 5; i++) {
           g.fillRect(px + 4 + i * 13, py + S / 2, 8, 1)
         }
-        // Direction arrow — very subtle
+        // Direction arrow — warm yellow, stem + head
         const mx = px + S / 2, my = py + S / 2
-        g.fillStyle(0xffffff, 0.12)
+        g.fillStyle(0xffee88, 0.45)
         if (tile === 'ROAD_EAST') {
-          g.fillTriangle(mx + 10, my, mx - 4, my - 6, mx - 4, my + 6)
-          g.fillRect(mx - 10, my - 1, 12, 3)
+          g.fillRect(mx - 14, my - 2, 16, 4)                        // stem →
+          g.fillTriangle(mx + 14, my, mx + 1, my - 9, mx + 1, my + 9) // head
         } else {
-          g.fillTriangle(mx - 10, my, mx + 4, my - 6, mx + 4, my + 6)
-          g.fillRect(mx - 2, my - 1, 12, 3)
+          g.fillRect(mx - 2, my - 2, 16, 4)                         // stem ←
+          g.fillTriangle(mx - 14, my, mx - 1, my - 9, mx - 1, my + 9)
         }
         break
       }
@@ -350,19 +350,19 @@ export class GameScene extends Phaser.Scene {
         g.fillRect(px, py, SW, S)
         g.fillRect(px + S - SW, py, SW, S)
         // Center dashes
-        g.fillStyle(0xe0d8a0, 0.45)
+        g.fillStyle(0xe0d8a0, 0.35)
         for (let i = 0; i < 5; i++) {
           g.fillRect(px + S / 2, py + 4 + i * 13, 1, 8)
         }
-        // Direction arrow — very subtle
+        // Direction arrow — warm yellow, stem + head
         const mx = px + S / 2, my = py + S / 2
-        g.fillStyle(0xffffff, 0.12)
+        g.fillStyle(0xffee88, 0.45)
         if (tile === 'ROAD_SOUTH') {
-          g.fillTriangle(mx, my + 10, mx - 6, my - 4, mx + 6, my - 4)
-          g.fillRect(mx - 1, my - 10, 3, 12)
+          g.fillRect(mx - 2, my - 14, 4, 16)                        // stem ↓
+          g.fillTriangle(mx, my + 14, mx - 9, my + 1, mx + 9, my + 1) // head
         } else {
-          g.fillTriangle(mx, my - 10, mx - 6, my + 4, mx + 6, my + 4)
-          g.fillRect(mx - 1, my - 2, 3, 12)
+          g.fillRect(mx - 2, my - 2, 4, 16)                         // stem ↑
+          g.fillTriangle(mx, my - 14, mx - 9, my - 1, mx + 9, my - 1)
         }
         break
       }
@@ -757,8 +757,11 @@ export class GameScene extends Phaser.Scene {
       drawBg(false, false)
 
       const lbl = this.add.text(cx, cy, label, {
-        fontFamily: 'monospace', fontSize: '26px',
-        color: '#ffffff', stroke: '#000000', strokeThickness: 2,
+        fontFamily: 'monospace', 
+        fontSize: '26px',
+        color: '#ffffff', 
+        stroke: '#000000', 
+        strokeThickness: 2,
       }).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(202)
 
       const zone = this.add.zone(cx, cy, R * 2, R * 2)
@@ -776,11 +779,45 @@ export class GameScene extends Phaser.Scene {
 
     this.joystickGfx = this.add.graphics().setScrollFactor(0).setDepth(300)
 
+    // Leave button — top-left HUD
+    const backBtn = this.add.text(16, 16, t('leave'), {
+      fontFamily: 'monospace',
+      fontSize: '16px',
+      color: '#6666aa',
+      stroke: '#000000',
+      strokeThickness: 2,
+    }).setScrollFactor(0).setDepth(200).setOrigin(0, 0).setInteractive({ useHandCursor: true })
+    backBtn.on('pointerover', () => backBtn.setColor('#aaaaff'))
+    backBtn.on('pointerout',  () => backBtn.setColor('#6666aa'))
+    backBtn.on('pointerdown', () => this.showLeaveConfirm())
+    this.cameras.main.ignore(backBtn)
+
+    // Help button — above navigator
+    const helpBtn = this.add.text(29, height - 150, t('howToPlay'), {
+      fontFamily: 'monospace',
+      fontSize: '14px',
+      color: '#00ccaa',
+      stroke: '#000000',
+      strokeThickness: 2,
+    }).setScrollFactor(0).setDepth(200).setOrigin(0, 0).setInteractive({ useHandCursor: true })
+    helpBtn.on('pointerover', () => helpBtn.setColor('#ffffff'))
+    helpBtn.on('pointerout',  () => helpBtn.setColor('#00ccaa'))
+    helpBtn.on('pointerdown', () => {
+      this.scene.launch('RulesScene', { caller: 'GameScene' })
+    })
+    this.cameras.main.ignore(helpBtn)
+
+    this.events.on('resume', () => {
+      // nothing extra needed — scene resumes normally
+    })
+
     this.hudObjects.push(
       this.hudTimer, this.hudScores, this.hudMyScore,
       this.hudOrderTimer, this.hudNavArrow, this.hudNavDist,
       ...plusObjs, ...minusObjs,
       this.joystickGfx,
+      helpBtn,
+      backBtn,
     )
   }
 
@@ -1071,6 +1108,93 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.updateHUD()
+  }
+
+  // ── Leave confirmation ───────────────────────────────────────────────
+
+  private showLeaveConfirm(): void {
+    const { width, height } = this.scale
+
+    const overlay = this.add.graphics().setScrollFactor(0).setDepth(500)
+    overlay.fillStyle(0x000000, 0.65)
+    overlay.fillRect(0, 0, width, height)
+
+    const PW = 340, PH = 160
+    const px = width / 2 - PW / 2
+    const py = height / 2 - PH / 2
+
+    const panel = this.add.graphics().setScrollFactor(0).setDepth(501)
+    panel.fillStyle(0x1a1f2e, 1)
+    panel.fillRoundedRect(px, py, PW, PH, 8)
+    panel.lineStyle(2, 0x00ccaa, 1)
+    panel.strokeRoundedRect(px, py, PW, PH, 8)
+
+    const msg = this.add.text(width / 2, py + 44, t('leaveConfirm'), {
+      fontFamily: 'monospace',
+      fontSize: '16px',
+      color: '#ccddcc',
+      align: 'center',
+      wordWrap: { width: PW - 32 },
+    }).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(502)
+
+    const makeBtn = (
+      bx: number,
+      label: string,
+      filled: boolean,
+      danger: boolean,
+      onClick: () => void,
+    ) => {
+      const btnW = 140, btnH = 40
+      const borderColor = danger ? 0xcc2244 : 0x00ccaa
+      const textColor   = danger ? '#ff4466' : '#00ff88'
+      const fillColor   = danger ? 0x220011 : 0x003333
+      const hoverColor  = danger ? 0x440022 : 0x005544
+
+      const bg = this.add.graphics().setScrollFactor(0).setDepth(502)
+      const drawBg = (hover: boolean) => {
+        bg.clear()
+        bg.lineStyle(2, borderColor, 1)
+        bg.fillStyle(filled ? (hover ? hoverColor : fillColor) : (hover ? fillColor : 0x111a22), 1)
+        bg.fillRect(bx - btnW / 2, py + PH - 60, btnW, btnH)
+        bg.strokeRect(bx - btnW / 2, py + PH - 60, btnW, btnH)
+      }
+      drawBg(false)
+
+      const lbl = this.add.text(bx, py + PH - 60 + btnH / 2, label, {
+        fontFamily: 'monospace',
+        fontSize: '16px',
+        color: textColor,
+      }).setOrigin(0.5).setScrollFactor(0).setDepth(503)
+
+      bg.setInteractive(
+        new Phaser.Geom.Rectangle(bx - btnW / 2, py + PH - 60, btnW, btnH),
+        Phaser.Geom.Rectangle.Contains,
+      )
+      bg.on('pointerover', () => { drawBg(true);  lbl.setColor('#ffffff') })
+      bg.on('pointerout',  () => { drawBg(false); lbl.setColor(textColor) })
+      bg.on('pointerdown', onClick)
+
+      this.cameras.main.ignore([bg, lbl])
+      return [bg, lbl] as const
+    }
+
+    const destroy = () => {
+      overlay.destroy(); panel.destroy(); msg.destroy()
+      yBg.destroy(); yLbl.destroy(); nBg.destroy(); nLbl.destroy()
+    }
+
+    const [yBg, yLbl] = makeBtn(width / 2 - 80, t('leaveYes'), true, true, () => {
+      destroy()
+      getSocket().emit('player:leave')
+      this.cleanupSocket()
+      this.scene.start('LobbyScene', { code: sessionStorage.getItem('roomCode') ?? '', phase: 'playing' })
+    })
+
+    const [nBg, nLbl] = makeBtn(width / 2 + 80, t('leaveNo'), false, false, () => {
+      destroy()
+    })
+
+    this.cameras.main.ignore([overlay, panel, msg])
   }
 
   // ── Cleanup ──────────────────────────────────────────────────────────
