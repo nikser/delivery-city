@@ -98,3 +98,4 @@ export const ORDER_TTL_HELD = 30_000
 export const MOVE_SPEED = 2
 export const MOVE_DURATION = 150
 export const BOT_SPEEDS = [280, 180, 110] // slow, medium, fast (ms per tile)
+export const MAX_PLAYERS = 9

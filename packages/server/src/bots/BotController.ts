@@ -68,7 +68,8 @@ export class BotController {
       }
 
       const orderChanged = player.carryingOrderId !== botState.carryingOrderId
-      const stuck = !player.isMoving && (now - botState.lastMoveTime) > 2000
+      const stuckThreshold = player.carryingOrderId ? 3000 : 2000
+      const stuck = !player.isMoving && (now - botState.lastMoveTime) > stuckThreshold
 
       if (!player.isMoving) {
         if (stuck) {

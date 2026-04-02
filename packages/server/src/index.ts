@@ -13,10 +13,9 @@ import { createServer } from 'http'
 import { Server } from 'socket.io'
 import path from 'path'
 import fs from 'fs'
-import fs from 'fs'
 import { GameRoom } from './game/GameRoom'
 import { generateId } from './game/IdGenerator'
-import { BOT_SPEEDS, BotDifficulty } from '@delivery-city/shared'
+import { BOT_SPEEDS, BotDifficulty, MAX_PLAYERS } from '@delivery-city/shared'
 
 const app = express()
 const httpServer = createServer(app)
@@ -117,7 +116,7 @@ io.on('connection', (socket) => {
     const normalised = code.trim().toUpperCase()
     const room = getRoom(normalised)
     if (!room) {
-      socket.emit('room:error', { message: 'Комната не найдена' })
+      socket.emit('room:error', { message: 'roomNotFound' })
       return
     }
     leaveCurrentRoom(socket.id)
@@ -139,6 +138,13 @@ io.on('connection', (socket) => {
     if (!code) return
     const room = getRoom(code)
     if (!room) return
+    const players = room.getState().players
+    // Kick a bot to make room for the incoming human player
+    const bots = Object.values(players).filter(p => p.isBot)
+    const totalCount = Object.keys(players).length
+    if (totalCount >= MAX_PLAYERS && bots.length > 0) {
+      room.removePlayer(bots[bots.length - 1].id)
+    }
     room.addPlayer(socket.id, nickname || `Courier_${socket.id.slice(0, 4)}`)
     lobbyBroadcast(code, room)
 
@@ -178,6 +184,7 @@ io.on('connection', (socket) => {
     const room = getRoom(code)
     if (!room || room.getState().phase !== 'lobby') return
     if (!room.getState().players[socket.id]) return
+    if (Object.keys(room.getState().players).length >= MAX_PLAYERS) return
     const botId = generateId('bot')
     const botNum = Object.values(room.getState().players).filter(p => p.isBot).length + 1
     const speedMap: Record<string, number> = { slow: BOT_SPEEDS[0], medium: BOT_SPEEDS[1], fast: BOT_SPEEDS[2] }

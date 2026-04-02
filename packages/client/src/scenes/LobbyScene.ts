@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 import { getSocket } from '../network/SocketClient'
 import { t } from '../i18n'
 import { addLangSwitcher } from '../ui/LangSwitcher'
+import { createButton } from '../ui/Button'
 
 export class LobbyScene extends Phaser.Scene {
   private nicknameInput!: HTMLInputElement
@@ -27,37 +28,43 @@ export class LobbyScene extends Phaser.Scene {
     this.playerListRows = []
     const { width, height } = this.scale
 
+    // Scanlines — match WelcomeScene style
+    const sg = this.add.graphics()
+    sg.lineStyle(1, 0x000000, 0.12)
+    for (let y = 0; y < height; y += 3) sg.lineBetween(0, y, width, y)
+    sg.setDepth(100)
+
     // Back button (top-left)
-    const backBtn = this.add.text(24, 18, t('back'), {
+    const backBtn = this.add.text(20, 16, t('back'), {
       fontFamily: 'monospace',
       fontSize: '16px',
       color: '#6666aa',
     }).setOrigin(0, 0).setInteractive({ useHandCursor: true })
     backBtn.on('pointerover', () => backBtn.setColor('#aaaaff'))
-    backBtn.on('pointerout', () => backBtn.setColor('#6666aa'))
+    backBtn.on('pointerout',  () => backBtn.setColor('#6666aa'))
     backBtn.on('pointerdown', () => {
       this.cleanup()
       this.scene.start('WelcomeScene')
     })
 
-    // Room code display (top-right)
+    // Room code (top-right) — compact to not clash with title
     if (this.roomCode) {
-      const codeLabel = this.add.text(width - 16, 18, t('roomCodeLabel'), {
+      this.add.text(width - 16, 12, t('roomCodeLabel'), {
         fontFamily: 'monospace',
-        fontSize: '12px',
+        fontSize: '11px',
         color: '#555577',
       }).setOrigin(1, 0)
 
-      const codeText = this.add.text(width - 16, 34, this.roomCode, {
+      const codeText = this.add.text(width - 16, 26, this.roomCode, {
         fontFamily: 'monospace',
-        fontSize: '28px',
+        fontSize: '20px',
         color: '#44ccff',
         stroke: '#0066aa',
         strokeThickness: 2,
       }).setOrigin(1, 0).setInteractive({ useHandCursor: true })
 
       codeText.on('pointerover', () => codeText.setColor('#ffffff'))
-      codeText.on('pointerout', () => codeText.setColor('#44ccff'))
+      codeText.on('pointerout',  () => codeText.setColor('#44ccff'))
       codeText.on('pointerdown', () => {
         navigator.clipboard?.writeText(this.roomCode)
         codeText.setText(t('copied'))
@@ -65,19 +72,13 @@ export class LobbyScene extends Phaser.Scene {
       })
     }
 
-    // Title
-    this.add.text(width / 2, height * 0.08, 'DELIVERY CITY', {
+    // Title — 40px, positioned below header area
+    this.add.text(width / 2, height * 0.11, 'DELIVERY CITY', {
       fontFamily: 'monospace',
-      fontSize: '56px',
+      fontSize: '40px',
       color: '#ffdd00',
       stroke: '#aa8800',
       strokeThickness: 4,
-    }).setOrigin(0.5)
-
-    this.add.text(width / 2, height * 0.16, t('tagline'), {
-      fontFamily: 'monospace',
-      fontSize: '18px',
-      color: '#aaaacc',
     }).setOrigin(0.5)
 
     if (this.initialPhase === 'playing') {
@@ -86,13 +87,13 @@ export class LobbyScene extends Phaser.Scene {
     }
 
     // Nickname label
-    this.add.text(width / 2, height * 0.23, t('enterNick'), {
+    this.add.text(width / 2, height * 0.21, t('enterNick'), {
       fontFamily: 'monospace',
-      fontSize: '20px',
-      color: '#ffffff',
+      fontSize: '18px',
+      color: '#aaaacc',
     }).setOrigin(0.5)
 
-    // HTML input element
+    // HTML nickname input
     this.nicknameInput = document.createElement('input')
     this.nicknameInput.type = 'text'
     this.nicknameInput.placeholder = t('nickPlaceholder')
@@ -105,12 +106,21 @@ export class LobbyScene extends Phaser.Scene {
       padding: '10px 16px',
       background: '#16213e',
       color: '#ffffff',
-      border: '2px solid #4444aa',
+      border: '2px solid #00ccaa',
       borderRadius: '4px',
       outline: 'none',
       textAlign: 'center',
       width: '280px',
       zIndex: '10',
+      transition: 'border-color 0.15s, box-shadow 0.15s',
+    })
+    this.nicknameInput.addEventListener('focus', () => {
+      this.nicknameInput.style.borderColor = '#00ffcc'
+      this.nicknameInput.style.boxShadow = '0 0 8px #00ccaa88'
+    })
+    this.nicknameInput.addEventListener('blur', () => {
+      this.nicknameInput.style.borderColor = '#00ccaa'
+      this.nicknameInput.style.boxShadow = 'none'
     })
     document.body.appendChild(this.nicknameInput)
     this.repositionInput()
@@ -120,118 +130,15 @@ export class LobbyScene extends Phaser.Scene {
     })
 
     // Status text
-    this.statusText = this.add.text(width / 2, height * 0.32, '', {
+    this.statusText = this.add.text(width / 2, height * 0.33, '', {
       fontFamily: 'monospace',
-      fontSize: '16px',
+      fontSize: '14px',
       color: '#aaaaff',
     }).setOrigin(0.5)
 
-    // Ready button
+    // READY button — filled teal, switches to outlined on join
     let joined = false
-    const playBtn = this.add.text(width / 2, height * 0.39, t('ready'), {
-      fontFamily: 'monospace',
-      fontSize: '32px',
-      color: '#00ff88',
-      backgroundColor: '#002244',
-      padding: { x: 24, y: 12 },
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true })
-
-    // Start session button
-    const startBtn = this.add.text(width / 2, height * 0.49, t('startGame'), {
-      fontFamily: 'monospace',
-      fontSize: '24px',
-      color: '#ffaa00',
-      backgroundColor: '#332200',
-      padding: { x: 20, y: 10 },
-    }).setOrigin(0.5)
-
-    // Bot difficulty selector
-    type Difficulty = 'slow' | 'medium' | 'fast'
-    const difficulties: { key: Difficulty; label: string }[] = [
-      { key: 'slow',   label: t('slow')   },
-      { key: 'medium', label: t('medium') },
-      { key: 'fast',   label: t('fast')   },
-    ]
-    const diffBtns = difficulties.map(({ key, label }, i) => {
-      const btn = this.add.text(width / 2 - 44 + i * 44, height * 0.645, label, {
-        fontFamily: 'monospace',
-        fontSize: '14px',
-        color: key === 'medium' ? '#000000' : '#aaaaaa',
-        backgroundColor: key === 'medium' ? '#44ccff' : '#223344',
-        padding: { x: 8, y: 5 },
-      }).setOrigin(0.5)
-      return { btn, key }
-    })
-
-    const selectDifficulty = (d: Difficulty) => {
-      diffBtns.forEach(({ btn, key }) => {
-        btn.setColor(key === d ? '#000000' : '#aaaaaa')
-        btn.setBackgroundColor(key === d ? '#44ccff' : '#223344')
-      })
-    }
-
-    diffBtns.forEach(({ btn, key }) => {
-      btn.setInteractive({ useHandCursor: true })
-      btn.on('pointerdown', () => getSocket().emit('bot:difficulty', { difficulty: key }))
-    })
-
-    // Apply initial difficulty received from server
-    selectDifficulty(this.initialDifficulty)
-
-    // Bot buttons — disabled until joined
-    const botAddBtn = this.add.text(width / 2 - 90, height * 0.57, t('addBot'), {
-      fontFamily: 'monospace',
-      fontSize: '20px',
-      color: '#44ccff',
-      backgroundColor: '#002233',
-      padding: { x: 16, y: 8 },
-    }).setOrigin(0.5)
-
-    const botRemoveBtn = this.add.text(width / 2 + 90, height * 0.57, t('removeBot'), {
-      fontFamily: 'monospace',
-      fontSize: '20px',
-      color: '#ff6644',
-      backgroundColor: '#330800',
-      padding: { x: 16, y: 8 },
-    }).setOrigin(0.5)
-
-    const setJoined = (value: boolean) => {
-      joined = value
-      if (joined) {
-        playBtn.setText(t('cancel'))
-        playBtn.setFontSize('18px')
-        playBtn.setColor('#888888')
-        playBtn.setBackgroundColor('#1a1a1a')
-
-        startBtn.setInteractive({ useHandCursor: true })
-        botAddBtn.setInteractive({ useHandCursor: true })
-        botRemoveBtn.setInteractive({ useHandCursor: true })
-        startBtn.setAlpha(1)
-        botAddBtn.setAlpha(1)
-        botRemoveBtn.setAlpha(1)
-        diffBtns.forEach(({ btn }) => btn.setAlpha(1))
-      } else {
-        playBtn.setText(t('ready'))
-        playBtn.setFontSize('32px')
-        playBtn.setColor('#00ff88')
-        playBtn.setBackgroundColor('#002244')
-
-        startBtn.disableInteractive()
-        botAddBtn.disableInteractive()
-        botRemoveBtn.disableInteractive()
-        startBtn.setAlpha(0.35)
-        botAddBtn.setAlpha(0.35)
-        botRemoveBtn.setAlpha(0.35)
-        diffBtns.forEach(({ btn }) => btn.setAlpha(0.35))
-      }
-    }
-
-    // Initial state — not joined yet
-    setJoined(false)
-
-    playBtn.on('pointerover', () => { if (!joined) playBtn.setColor('#ffffff') })
-    playBtn.on('pointerout',  () => { if (!joined) playBtn.setColor('#00ff88') })
-    playBtn.on('pointerdown', () => {
+    const ready = createButton(this, width / 2, height * 0.38, t('ready'), true, () => {
       if (!joined) {
         this.handleJoin()
         setJoined(true)
@@ -242,24 +149,85 @@ export class LobbyScene extends Phaser.Scene {
       }
     })
 
-    startBtn.on('pointerover', () => startBtn.setColor('#ffffff'))
-    startBtn.on('pointerout',  () => startBtn.setColor('#ffaa00'))
-    startBtn.on('pointerdown', () => getSocket().emit('session:start'))
+    // START GAME button — outlined, disabled until joined
+    const start = createButton(this, width / 2, height * 0.48, t('startGame'), false, () => {
+      getSocket().emit('session:start')
+    })
 
-    botAddBtn.on('pointerover', () => botAddBtn.setColor('#ffffff'))
-    botAddBtn.on('pointerout',  () => botAddBtn.setColor('#44ccff'))
-    botAddBtn.on('pointerdown', () => getSocket().emit('bot:add'))
+    // Bot buttons — side by side, smaller width
+    const botAdd = createButton(this, width / 2 - 80, height * 0.57, t('addBot'), false, () => {
+      getSocket().emit('bot:add')
+    }, { width: 140, fontSize: '16px' })
 
-    botRemoveBtn.on('pointerover', () => botRemoveBtn.setColor('#ffffff'))
-    botRemoveBtn.on('pointerout',  () => botRemoveBtn.setColor('#ff6644'))
-    botRemoveBtn.on('pointerdown', () => getSocket().emit('bot:remove'))
+    const botRemove = createButton(this, width / 2 + 80, height * 0.57, t('removeBot'), false, () => {
+      getSocket().emit('bot:remove')
+    }, { width: 140, fontSize: '16px', danger: true })
+
+    // Difficulty selector
+    type Difficulty = 'slow' | 'medium' | 'fast'
+    const difficulties: { key: Difficulty; label: string }[] = [
+      { key: 'slow',   label: t('slow')   },
+      { key: 'medium', label: t('medium') },
+      { key: 'fast',   label: t('fast')   },
+    ]
+    const diffBtns = difficulties.map(({ key, label }, i) => {
+      const btn = this.add.text(width / 2 - 44 + i * 44, height * 0.645, label, {
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        color: '#aaaaaa',
+        backgroundColor: '#223344',
+        padding: { x: 8, y: 5 },
+      }).setOrigin(0.5)
+      return { btn, key }
+    })
+
+    const selectDifficulty = (d: Difficulty) => {
+      diffBtns.forEach(({ btn, key }) => {
+        btn.setColor(key === d ? '#000000' : '#aaaaaa')
+        btn.setBackgroundColor(key === d ? '#00ccaa' : '#223344')
+      })
+    }
+
+    diffBtns.forEach(({ btn, key }) => {
+      btn.setInteractive({ useHandCursor: true })
+      btn.on('pointerdown', () => getSocket().emit('bot:difficulty', { difficulty: key }))
+    })
+
+    selectDifficulty(this.initialDifficulty)
+
+    const setJoined = (value: boolean) => {
+      joined = value
+      if (joined) {
+        ready.setLabel(t('cancel'))
+        ready.setFilled(false)
+        start.container.setInteractive({ useHandCursor: true })
+        botAdd.container.setInteractive({ useHandCursor: true })
+        botRemove.container.setInteractive({ useHandCursor: true })
+        start.container.setAlpha(1)
+        botAdd.container.setAlpha(1)
+        botRemove.container.setAlpha(1)
+        diffBtns.forEach(({ btn }) => btn.setAlpha(1))
+      } else {
+        ready.setLabel(t('ready'))
+        ready.setFilled(true)
+        start.container.disableInteractive()
+        botAdd.container.disableInteractive()
+        botRemove.container.disableInteractive()
+        start.container.setAlpha(0.35)
+        botAdd.container.setAlpha(0.35)
+        botRemove.container.setAlpha(0.35)
+        diffBtns.forEach(({ btn }) => btn.setAlpha(0.35))
+      }
+    }
+
+    setJoined(false)
 
     // Player list table
-    const MAX_ROWS = 10
+    const MAX_ROWS = 9
     const ROW_H = 22
     const TABLE_W = 320
     const tableX = width / 2
-    const tableY = height * 0.72
+    const tableY = height * 0.71
     const tableH = ROW_H * MAX_ROWS + 32
 
     const tableBg = this.add.graphics()
@@ -267,8 +235,6 @@ export class LobbyScene extends Phaser.Scene {
     tableBg.fillRect(tableX - TABLE_W / 2, tableY - 26, TABLE_W, tableH)
     tableBg.lineStyle(1, 0x2a2a5a, 1)
     tableBg.strokeRect(tableX - TABLE_W / 2, tableY - 26, TABLE_W, tableH)
-    // Header separator
-    tableBg.lineStyle(1, 0x2a2a5a, 1)
     tableBg.lineBetween(tableX - TABLE_W / 2 + 8, tableY - 4, tableX + TABLE_W / 2 - 8, tableY - 4)
 
     this.add.text(tableX - TABLE_W / 2 + 14, tableY - 22, t('tableHeader'), {
@@ -282,16 +248,13 @@ export class LobbyScene extends Phaser.Scene {
       this.playerListRows.push(row)
     }
 
-    // Render initial player list (received before this scene was created)
     this.renderPlayerList(this.initialPlayers)
 
-    // Language switcher
     addLangSwitcher(this, () => {
       this.cleanup()
       this.scene.restart()
     })
 
-    // Socket events
     const socket = getSocket()
 
     socket.on('lobby:update', (data) => {
@@ -313,7 +276,7 @@ export class LobbyScene extends Phaser.Scene {
 
     const inputWidth = 280 * scaleX
     const inputX = rect.left + (width / 2) * scaleX - inputWidth / 2
-    const inputY = rect.top + height * 0.275 * (rect.height / height)
+    const inputY = rect.top + height * 0.265 * (rect.height / height)
 
     this.nicknameInput.style.left = `${inputX}px`
     this.nicknameInput.style.top = `${inputY}px`
@@ -337,22 +300,21 @@ export class LobbyScene extends Phaser.Scene {
   private createMidGameJoinUI(width: number, height: number): void {
     this.add.text(width / 2, height * 0.36, t('midGameTitle'), {
       fontFamily: 'monospace',
-      fontSize: '28px',
+      fontSize: '24px',
       color: '#ffaa00',
     }).setOrigin(0.5)
 
-    this.add.text(width / 2, height * 0.46, t('midGameDesc'), {
+    this.add.text(width / 2, height * 0.44, t('midGameDesc'), {
       fontFamily: 'monospace',
-      fontSize: '16px',
+      fontSize: '15px',
       color: '#aaaacc',
       align: 'center',
     }).setOrigin(0.5)
 
-    // Nickname input
-    this.add.text(width / 2, height * 0.56, t('enterNick'), {
+    this.add.text(width / 2, height * 0.53, t('enterNick'), {
       fontFamily: 'monospace',
-      fontSize: '18px',
-      color: '#ffffff',
+      fontSize: '16px',
+      color: '#aaaacc',
     }).setOrigin(0.5)
 
     this.nicknameInput = document.createElement('input')
@@ -367,12 +329,21 @@ export class LobbyScene extends Phaser.Scene {
       padding: '10px 16px',
       background: '#16213e',
       color: '#ffffff',
-      border: '2px solid #4444aa',
+      border: '2px solid #00ccaa',
       borderRadius: '4px',
       outline: 'none',
       textAlign: 'center',
       width: '280px',
       zIndex: '10',
+      transition: 'border-color 0.15s, box-shadow 0.15s',
+    })
+    this.nicknameInput.addEventListener('focus', () => {
+      this.nicknameInput.style.borderColor = '#00ffcc'
+      this.nicknameInput.style.boxShadow = '0 0 8px #00ccaa88'
+    })
+    this.nicknameInput.addEventListener('blur', () => {
+      this.nicknameInput.style.borderColor = '#00ccaa'
+      this.nicknameInput.style.boxShadow = 'none'
     })
     document.body.appendChild(this.nicknameInput)
     this.repositionInput()
@@ -381,17 +352,9 @@ export class LobbyScene extends Phaser.Scene {
       if (e.key === 'Enter') this.handleMidGameJoin()
     })
 
-    const joinBtn = this.add.text(width / 2, height * 0.72, t('joinGame'), {
-      fontFamily: 'monospace',
-      fontSize: '28px',
-      color: '#00ff88',
-      backgroundColor: '#002244',
-      padding: { x: 24, y: 12 },
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true })
-
-    joinBtn.on('pointerover', () => joinBtn.setColor('#ffffff'))
-    joinBtn.on('pointerout', () => joinBtn.setColor('#00ff88'))
-    joinBtn.on('pointerdown', () => this.handleMidGameJoin())
+    createButton(this, width / 2, height * 0.68, t('joinGame'), true, () => {
+      this.handleMidGameJoin()
+    })
 
     const socket = getSocket()
     socket.on('game:start', (data) => {
@@ -407,7 +370,7 @@ export class LobbyScene extends Phaser.Scene {
   }
 
   private renderPlayerList(players: Array<{ id: string; nickname: string; isBot: boolean }>): void {
-    const MAX_ROWS = 10
+    const MAX_ROWS = 9
     for (let i = 0; i < MAX_ROWS; i++) {
       const p = players[i]
       if (p) {
