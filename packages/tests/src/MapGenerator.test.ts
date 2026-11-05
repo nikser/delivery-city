@@ -41,13 +41,25 @@ describe('MapGenerator', () => {
     const queue: Array<[number, number]> = [[0, 0]]
     visited[0][0] = true
 
-    const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+    const dirs = [
+      [-1, 0],
+      [1, 0],
+      [0, -1],
+      [0, 1],
+    ]
     while (queue.length > 0) {
       const [y, x] = queue.shift()!
       for (const [dy, dx] of dirs) {
         const ny = y + dy
         const nx = x + dx
-        if (ny >= 0 && ny < height && nx >= 0 && nx < width && !visited[ny][nx] && isWalkable(tiles[ny][nx])) {
+        if (
+          ny >= 0 &&
+          ny < height &&
+          nx >= 0 &&
+          nx < width &&
+          !visited[ny][nx] &&
+          isWalkable(tiles[ny][nx])
+        ) {
           visited[ny][nx] = true
           queue.push([ny, nx])
         }

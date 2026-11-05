@@ -64,11 +64,13 @@ git branch -d feat/short-description
 Types: `feat` · `fix` · `refactor` · `chore` · `test` · `docs`
 
 Rules:
+
 - Lowercase, no period at the end
 - One line is enough for small commits
 - Add a blank line + short body only if the why isn't obvious
 
 **Good examples:**
+
 ```
 feat: add delivery timer to HUD
 fix: bots no longer freeze at intersections
@@ -77,6 +79,7 @@ refactor: extract BFS logic into separate module
 ```
 
 **Avoid:**
+
 ```
 fixed stuff
 WIP

@@ -13,13 +13,16 @@ describe('spawnOrder', () => {
 
   test('pickupTile != deliveryTile', () => {
     const order = manager.spawnOrder({})
-    const same = order.pickupTile.x === order.deliveryTile.x && order.pickupTile.y === order.deliveryTile.y
+    const same =
+      order.pickupTile.x === order.deliveryTile.x && order.pickupTile.y === order.deliveryTile.y
     expect(same).toBe(false)
   })
 
   test('manhattan-дистанция между pickup и delivery >= 5', () => {
     const order = manager.spawnOrder({})
-    const dist = Math.abs(order.deliveryTile.x - order.pickupTile.x) + Math.abs(order.deliveryTile.y - order.pickupTile.y)
+    const dist =
+      Math.abs(order.deliveryTile.x - order.pickupTile.x) +
+      Math.abs(order.deliveryTile.y - order.pickupTile.y)
     expect(dist).toBeGreaterThanOrEqual(5)
   })
 
@@ -85,8 +88,8 @@ describe('expireOrder', () => {
 
 describe('getTargetOrderCount', () => {
   test('0 игроков → 3', () => expect(manager.getTargetOrderCount(0)).toBe(3))
-  test('1 игрок → 3',   () => expect(manager.getTargetOrderCount(1)).toBe(3))
-  test('2 игрока → 4',  () => expect(manager.getTargetOrderCount(2)).toBe(4))
+  test('1 игрок → 3', () => expect(manager.getTargetOrderCount(1)).toBe(3))
+  test('2 игрока → 4', () => expect(manager.getTargetOrderCount(2)).toBe(4))
   test('5 игроков → 10', () => expect(manager.getTargetOrderCount(5)).toBe(10))
 })
 

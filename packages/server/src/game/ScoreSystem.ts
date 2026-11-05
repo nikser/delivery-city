@@ -1,6 +1,6 @@
 export function calculateDeliveryScore(
   pickedUpAt: number,
-  orderTTL: number
+  orderTTL: number,
 ): { base: number; speedBonus: number; total: number } {
   const base = 100
   const elapsed = Date.now() - pickedUpAt

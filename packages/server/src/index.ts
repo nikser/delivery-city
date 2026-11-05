@@ -38,7 +38,7 @@ if (gaId) {
     gtag('js', new Date());
     gtag('config', '${gaId}');
   </script>
-</head>`
+</head>`,
   )
 }
 
@@ -95,7 +95,12 @@ function leaveCurrentRoom(socketId: string): void {
 
 io.on('connection', (socket) => {
   console.log('connected:', socket.id)
-  if (process.env.SENTRY_DSN) Sentry.addBreadcrumb({ category: 'socket', message: 'client connected', data: { id: socket.id } })
+  if (process.env.SENTRY_DSN)
+    Sentry.addBreadcrumb({
+      category: 'socket',
+      message: 'client connected',
+      data: { id: socket.id },
+    })
 
   socket.on('room:create', () => {
     const prevCode = socketRooms.get(socket.id)
@@ -109,7 +114,11 @@ io.on('connection', (socket) => {
     rooms.set(code, room)
     socket.join(code)
     socketRooms.set(socket.id, code)
-    socket.emit('room:created', { code, players: room.getLobbyPlayers(), difficulty: room.getLobbyDifficulty() })
+    socket.emit('room:created', {
+      code,
+      players: room.getLobbyPlayers(),
+      difficulty: room.getLobbyDifficulty(),
+    })
   })
 
   socket.on('room:join', ({ code }) => {
@@ -140,7 +149,7 @@ io.on('connection', (socket) => {
     if (!room) return
     const players = room.getState().players
     // Kick a bot to make room for the incoming human player
-    const bots = Object.values(players).filter(p => p.isBot)
+    const bots = Object.values(players).filter((p) => p.isBot)
     const totalCount = Object.keys(players).length
     if (totalCount >= MAX_PLAYERS && bots.length > 0) {
       room.removePlayer(bots[bots.length - 1].id)
@@ -186,9 +195,18 @@ io.on('connection', (socket) => {
     if (!room.getState().players[socket.id]) return
     if (Object.keys(room.getState().players).length >= MAX_PLAYERS) return
     const botId = generateId('bot')
-    const botNum = Object.values(room.getState().players).filter(p => p.isBot).length + 1
-    const speedMap: Record<string, number> = { slow: BOT_SPEEDS[0], medium: BOT_SPEEDS[1], fast: BOT_SPEEDS[2] }
-    room.addPlayer(botId, `Bot_${botNum}`, true, speedMap[room.getLobbyDifficulty()] ?? BOT_SPEEDS[1])
+    const botNum = Object.values(room.getState().players).filter((p) => p.isBot).length + 1
+    const speedMap: Record<string, number> = {
+      slow: BOT_SPEEDS[0],
+      medium: BOT_SPEEDS[1],
+      fast: BOT_SPEEDS[2],
+    }
+    room.addPlayer(
+      botId,
+      `Bot_${botNum}`,
+      true,
+      speedMap[room.getLobbyDifficulty()] ?? BOT_SPEEDS[1],
+    )
     lobbyBroadcast(code, room)
   })
 
@@ -198,7 +216,7 @@ io.on('connection', (socket) => {
     const room = getRoom(code)
     if (!room || room.getState().phase !== 'lobby') return
     if (!room.getState().players[socket.id]) return
-    const bots = Object.values(room.getState().players).filter(p => p.isBot)
+    const bots = Object.values(room.getState().players).filter((p) => p.isBot)
     if (bots.length === 0) return
     const last = bots[bots.length - 1]
     room.removePlayer(last.id)
@@ -220,8 +238,8 @@ io.on('connection', (socket) => {
         level: 'info',
         extra: {
           roomCode: code,
-          playerCount: players.filter(p => !p.isBot).length,
-          botCount: players.filter(p => p.isBot).length,
+          playerCount: players.filter((p) => !p.isBot).length,
+          botCount: players.filter((p) => p.isBot).length,
         },
       })
     }

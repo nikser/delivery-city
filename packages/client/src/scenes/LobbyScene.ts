@@ -17,7 +17,12 @@ export class LobbyScene extends Phaser.Scene {
     super({ key: 'LobbyScene' })
   }
 
-  init(data: { code: string; players?: Array<{ id: string; nickname: string; isBot: boolean }>; difficulty?: 'slow' | 'medium' | 'fast'; phase?: 'lobby' | 'playing' | 'results' }): void {
+  init(data: {
+    code: string
+    players?: Array<{ id: string; nickname: string; isBot: boolean }>
+    difficulty?: 'slow' | 'medium' | 'fast'
+    phase?: 'lobby' | 'playing' | 'results'
+  }): void {
     this.roomCode = data?.code ?? ''
     this.initialPlayers = data?.players ?? []
     this.initialDifficulty = data?.difficulty ?? 'medium'
@@ -35,13 +40,16 @@ export class LobbyScene extends Phaser.Scene {
     sg.setDepth(100)
 
     // Back button (top-left)
-    const backBtn = this.add.text(20, 16, t('back'), {
-      fontFamily: 'monospace',
-      fontSize: '16px',
-      color: '#6666aa',
-    }).setOrigin(0, 0).setInteractive({ useHandCursor: true })
+    const backBtn = this.add
+      .text(20, 16, t('back'), {
+        fontFamily: 'monospace',
+        fontSize: '16px',
+        color: '#6666aa',
+      })
+      .setOrigin(0, 0)
+      .setInteractive({ useHandCursor: true })
     backBtn.on('pointerover', () => backBtn.setColor('#aaaaff'))
-    backBtn.on('pointerout',  () => backBtn.setColor('#6666aa'))
+    backBtn.on('pointerout', () => backBtn.setColor('#6666aa'))
     backBtn.on('pointerdown', () => {
       this.cleanup()
       this.scene.start('WelcomeScene')
@@ -49,22 +57,27 @@ export class LobbyScene extends Phaser.Scene {
 
     // Room code (top-right) — compact to not clash with title
     if (this.roomCode) {
-      this.add.text(width - 16, 12, t('roomCodeLabel'), {
-        fontFamily: 'monospace',
-        fontSize: '11px',
-        color: '#555577',
-      }).setOrigin(1, 0)
+      this.add
+        .text(width - 16, 12, t('roomCodeLabel'), {
+          fontFamily: 'monospace',
+          fontSize: '11px',
+          color: '#555577',
+        })
+        .setOrigin(1, 0)
 
-      const codeText = this.add.text(width - 16, 26, this.roomCode, {
-        fontFamily: 'monospace',
-        fontSize: '20px',
-        color: '#44ccff',
-        stroke: '#0066aa',
-        strokeThickness: 2,
-      }).setOrigin(1, 0).setInteractive({ useHandCursor: true })
+      const codeText = this.add
+        .text(width - 16, 26, this.roomCode, {
+          fontFamily: 'monospace',
+          fontSize: '20px',
+          color: '#44ccff',
+          stroke: '#0066aa',
+          strokeThickness: 2,
+        })
+        .setOrigin(1, 0)
+        .setInteractive({ useHandCursor: true })
 
       codeText.on('pointerover', () => codeText.setColor('#ffffff'))
-      codeText.on('pointerout',  () => codeText.setColor('#44ccff'))
+      codeText.on('pointerout', () => codeText.setColor('#44ccff'))
       codeText.on('pointerdown', () => {
         navigator.clipboard?.writeText(this.roomCode)
         codeText.setText(t('copied'))
@@ -73,13 +86,15 @@ export class LobbyScene extends Phaser.Scene {
     }
 
     // Title — 40px, positioned below header area
-    this.add.text(width / 2, height * 0.11, 'DELIVERY CITY', {
-      fontFamily: 'monospace',
-      fontSize: '40px',
-      color: '#ffdd00',
-      stroke: '#aa8800',
-      strokeThickness: 4,
-    }).setOrigin(0.5)
+    this.add
+      .text(width / 2, height * 0.11, 'DELIVERY CITY', {
+        fontFamily: 'monospace',
+        fontSize: '40px',
+        color: '#ffdd00',
+        stroke: '#aa8800',
+        strokeThickness: 4,
+      })
+      .setOrigin(0.5)
 
     if (this.initialPhase === 'playing') {
       this.createMidGameJoinUI(width, height)
@@ -87,11 +102,13 @@ export class LobbyScene extends Phaser.Scene {
     }
 
     // Nickname label
-    this.add.text(width / 2, height * 0.21, t('enterNick'), {
-      fontFamily: 'monospace',
-      fontSize: '18px',
-      color: '#aaaacc',
-    }).setOrigin(0.5)
+    this.add
+      .text(width / 2, height * 0.21, t('enterNick'), {
+        fontFamily: 'monospace',
+        fontSize: '18px',
+        color: '#aaaacc',
+      })
+      .setOrigin(0.5)
 
     // HTML nickname input
     this.nicknameInput = document.createElement('input')
@@ -130,11 +147,13 @@ export class LobbyScene extends Phaser.Scene {
     })
 
     // Status text
-    this.statusText = this.add.text(width / 2, height * 0.33, '', {
-      fontFamily: 'monospace',
-      fontSize: '14px',
-      color: '#aaaaff',
-    }).setOrigin(0.5)
+    this.statusText = this.add
+      .text(width / 2, height * 0.33, '', {
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        color: '#aaaaff',
+      })
+      .setOrigin(0.5)
 
     // READY button — filled teal, switches to outlined on join
     let joined = false
@@ -155,29 +174,47 @@ export class LobbyScene extends Phaser.Scene {
     })
 
     // Bot buttons — side by side, smaller width
-    const botAdd = createButton(this, width / 2 - 80, height * 0.57, t('addBot'), false, () => {
-      getSocket().emit('bot:add')
-    }, { width: 140, fontSize: '16px' })
+    const botAdd = createButton(
+      this,
+      width / 2 - 80,
+      height * 0.57,
+      t('addBot'),
+      false,
+      () => {
+        getSocket().emit('bot:add')
+      },
+      { width: 140, fontSize: '16px' },
+    )
 
-    const botRemove = createButton(this, width / 2 + 80, height * 0.57, t('removeBot'), false, () => {
-      getSocket().emit('bot:remove')
-    }, { width: 140, fontSize: '16px', danger: true })
+    const botRemove = createButton(
+      this,
+      width / 2 + 80,
+      height * 0.57,
+      t('removeBot'),
+      false,
+      () => {
+        getSocket().emit('bot:remove')
+      },
+      { width: 140, fontSize: '16px', danger: true },
+    )
 
     // Difficulty selector
     type Difficulty = 'slow' | 'medium' | 'fast'
     const difficulties: { key: Difficulty; label: string }[] = [
-      { key: 'slow',   label: t('slow')   },
+      { key: 'slow', label: t('slow') },
       { key: 'medium', label: t('medium') },
-      { key: 'fast',   label: t('fast')   },
+      { key: 'fast', label: t('fast') },
     ]
     const diffBtns = difficulties.map(({ key, label }, i) => {
-      const btn = this.add.text(width / 2 - 44 + i * 44, height * 0.645, label, {
-        fontFamily: 'monospace',
-        fontSize: '14px',
-        color: '#aaaaaa',
-        backgroundColor: '#223344',
-        padding: { x: 8, y: 5 },
-      }).setOrigin(0.5)
+      const btn = this.add
+        .text(width / 2 - 44 + i * 44, height * 0.645, label, {
+          fontFamily: 'monospace',
+          fontSize: '14px',
+          color: '#aaaaaa',
+          backgroundColor: '#223344',
+          padding: { x: 8, y: 5 },
+        })
+        .setOrigin(0.5)
       return { btn, key }
     })
 
@@ -246,12 +283,16 @@ export class LobbyScene extends Phaser.Scene {
     tableBg.lineBetween(tableX - TABLE_W / 2 + 8, tableY - 4, tableX + TABLE_W / 2 - 8, tableY - 4)
 
     this.add.text(tableX - TABLE_W / 2 + 14, tableY - 22, t('tableHeader'), {
-      fontFamily: 'monospace', fontSize: '12px', color: '#555577',
+      fontFamily: 'monospace',
+      fontSize: '12px',
+      color: '#555577',
     })
 
     for (let i = 0; i < MAX_ROWS; i++) {
       const row = this.add.text(tableX - TABLE_W / 2 + 14, tableY + i * ROW_H, '', {
-        fontFamily: 'monospace', fontSize: '14px', color: '#ccccff',
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        color: '#ccccff',
       })
       this.playerListRows.push(row)
     }
@@ -264,13 +305,17 @@ export class LobbyScene extends Phaser.Scene {
     })
 
     // How to play button — bottom-left
-    const helpBtn = this.add.text(16, height - 16, t('howToPlay'), {
-      fontFamily: 'monospace',
-      fontSize: '14px',
-      color: '#00ccaa',
-    }).setOrigin(0, 1).setInteractive({ useHandCursor: true }).setDepth(50)
+    const helpBtn = this.add
+      .text(16, height - 16, t('howToPlay'), {
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        color: '#00ccaa',
+      })
+      .setOrigin(0, 1)
+      .setInteractive({ useHandCursor: true })
+      .setDepth(50)
     helpBtn.on('pointerover', () => helpBtn.setColor('#ffffff'))
-    helpBtn.on('pointerout',  () => helpBtn.setColor('#00ccaa'))
+    helpBtn.on('pointerout', () => helpBtn.setColor('#00ccaa'))
     helpBtn.on('pointerdown', () => {
       this.nicknameInput.style.display = 'none'
       this.scene.pause()
@@ -324,24 +369,30 @@ export class LobbyScene extends Phaser.Scene {
   }
 
   private createMidGameJoinUI(width: number, height: number): void {
-    this.add.text(width / 2, height * 0.36, t('midGameTitle'), {
-      fontFamily: 'monospace',
-      fontSize: '24px',
-      color: '#ffaa00',
-    }).setOrigin(0.5)
+    this.add
+      .text(width / 2, height * 0.36, t('midGameTitle'), {
+        fontFamily: 'monospace',
+        fontSize: '24px',
+        color: '#ffaa00',
+      })
+      .setOrigin(0.5)
 
-    this.add.text(width / 2, height * 0.44, t('midGameDesc'), {
-      fontFamily: 'monospace',
-      fontSize: '15px',
-      color: '#aaaacc',
-      align: 'center',
-    }).setOrigin(0.5)
+    this.add
+      .text(width / 2, height * 0.44, t('midGameDesc'), {
+        fontFamily: 'monospace',
+        fontSize: '15px',
+        color: '#aaaacc',
+        align: 'center',
+      })
+      .setOrigin(0.5)
 
-    this.add.text(width / 2, height * 0.53, t('enterNick'), {
-      fontFamily: 'monospace',
-      fontSize: '16px',
-      color: '#aaaacc',
-    }).setOrigin(0.5)
+    this.add
+      .text(width / 2, height * 0.53, t('enterNick'), {
+        fontFamily: 'monospace',
+        fontSize: '16px',
+        color: '#aaaacc',
+      })
+      .setOrigin(0.5)
 
     this.nicknameInput = document.createElement('input')
     this.nicknameInput.type = 'text'
@@ -383,7 +434,10 @@ export class LobbyScene extends Phaser.Scene {
     }
 
     this.nicknameInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { this.handleMidGameJoin(); lockForm() }
+      if (e.key === 'Enter') {
+        this.handleMidGameJoin()
+        lockForm()
+      }
     })
 
     const joinBtn = createButton(this, width / 2, height * 0.68, t('joinGame'), true, () => {

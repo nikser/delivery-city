@@ -4,23 +4,23 @@ import { getAllowedDirections, isWalkable } from '../map/MapGenerator'
 export function applyDirection(
   x: number,
   y: number,
-  direction: Direction
+  direction: Direction,
 ): { x: number; y: number } {
   switch (direction) {
-    case 'up':    return { x, y: y - 1 }
-    case 'down':  return { x, y: y + 1 }
-    case 'left':  return { x: x - 1, y }
-    case 'right': return { x: x + 1, y }
-    case 'idle':  return { x, y }
+    case 'up':
+      return { x, y: y - 1 }
+    case 'down':
+      return { x, y: y + 1 }
+    case 'left':
+      return { x: x - 1, y }
+    case 'right':
+      return { x: x + 1, y }
+    case 'idle':
+      return { x, y }
   }
 }
 
-export function canMove(
-  fromX: number,
-  fromY: number,
-  direction: Direction,
-  map: MapData
-): boolean {
+export function canMove(fromX: number, fromY: number, direction: Direction, map: MapData): boolean {
   const { x: toX, y: toY } = applyDirection(fromX, fromY, direction)
 
   if (toX < 0 || toX >= map.width || toY < 0 || toY >= map.height) {
