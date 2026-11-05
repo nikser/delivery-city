@@ -4,9 +4,7 @@ import { TileType } from '../../shared/src/index'
 describe('MapGenerator', () => {
   const map = generateMap()
 
-  // generateMap() has used size=32 since the Initial commit — this
-  // expectation said 30 since the Initial commit too, never matching any
-  // version of the code (confirmed via git log -p, not assumed).
+  // generateMap() has always used size=32, never 30.
   test('map is 32x32', () => {
     expect(map.width).toBe(32)
     expect(map.height).toBe(32)
@@ -78,9 +76,7 @@ describe('MapGenerator', () => {
     }
   })
 
-  // Same pattern: the spawn-picking algorithm changed (ba3402c, step-sample
-  // -> distance-sort) but the count was always 16, never 8 — confirmed via
-  // git log -p on MapGenerator.ts.
+  // spawn count has always been 16, never 8.
   test('spawnPoints.length == 16, all coordinates are INTERSECTION', () => {
     expect(map.spawnPoints.length).toBe(16)
     for (const { x, y } of map.spawnPoints) {

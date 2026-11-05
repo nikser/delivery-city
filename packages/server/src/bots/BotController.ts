@@ -163,13 +163,8 @@ export class BotController {
     }
   }
 
-  // A* по тайловой карте с учётом направлений дорог.
-  // Renamed from findPath -> bfs and made public: BotController.test.ts
-  // was written from day one against a public `bfs` method that never
-  // existed (confirmed via git log -p — Initial commit already had
-  // `findPath`, private). Per discussion, renaming the real method to
-  // match the test's intent, rather than rewriting the test to go through
-  // `tick()`/`updateBotState` indirectly.
+  // A* по тайловой карте. Renamed findPath -> bfs, made public — matches
+  // the test's expected API.
   bfs(
     from: { x: number; y: number },
     to: { x: number; y: number },

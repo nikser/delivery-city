@@ -94,11 +94,7 @@ describe('BotController.bfs', () => {
 })
 
 describe('BotController.tick', () => {
-  // wanderToRandom has existed since the Initial commit (confirmed via
-  // git log -p on BotController.ts): an idle bot with no available orders
-  // has always been designed to wander to a random intersection, not sit
-  // still. This expectation of an empty inputs map never matched any
-  // version of the code.
+  // Idle bots wander by design (wanderToRandom) — not an empty-inputs case.
   test('без заказов: бот блуждает (inputs не пустой)', () => {
     const bot = new BotController(map)
     const player = makePlayer('bot1', 0, 0)
