@@ -4,11 +4,14 @@ import { TileType } from '../../shared/src/index'
 describe('MapGenerator', () => {
   const map = generateMap()
 
-  test('map is 30x30', () => {
-    expect(map.width).toBe(30)
-    expect(map.height).toBe(30)
-    expect(map.tiles.length).toBe(30)
-    expect(map.tiles[0].length).toBe(30)
+  // generateMap() has used size=32 since the Initial commit — this
+  // expectation said 30 since the Initial commit too, never matching any
+  // version of the code (confirmed via git log -p, not assumed).
+  test('map is 32x32', () => {
+    expect(map.width).toBe(32)
+    expect(map.height).toBe(32)
+    expect(map.tiles.length).toBe(32)
+    expect(map.tiles[0].length).toBe(32)
   })
 
   test('tiles[0][0] == INTERSECTION (x=0 road, y=0 road)', () => {
@@ -75,8 +78,11 @@ describe('MapGenerator', () => {
     }
   })
 
-  test('spawnPoints.length == 8, all coordinates are INTERSECTION', () => {
-    expect(map.spawnPoints.length).toBe(8)
+  // Same pattern: the spawn-picking algorithm changed (ba3402c, step-sample
+  // -> distance-sort) but the count was always 16, never 8 — confirmed via
+  // git log -p on MapGenerator.ts.
+  test('spawnPoints.length == 16, all coordinates are INTERSECTION', () => {
+    expect(map.spawnPoints.length).toBe(16)
     for (const { x, y } of map.spawnPoints) {
       expect(map.tiles[y][x]).toBe('INTERSECTION')
     }

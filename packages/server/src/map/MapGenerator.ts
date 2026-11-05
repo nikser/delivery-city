@@ -17,7 +17,7 @@ export function generateMap(): MapData {
       if (rx && ry) {
         row.push('INTERSECTION')
       } else if (ry && !rx) {
-        row.push(y % 5 === 0 ? 'ROAD_WEST' : 'ROAD_EAST')
+        row.push(y % 5 === 0 ? 'ROAD_EAST' : 'ROAD_WEST')
       } else if (rx && !ry) {
         row.push(x % 5 === 0 ? 'ROAD_SOUTH' : 'ROAD_NORTH')
       } else {

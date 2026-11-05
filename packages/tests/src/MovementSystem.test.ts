@@ -15,8 +15,14 @@ describe('canMove — блокировки', () => {
 
   test('выход за границу: x < 0', () => expect(canMove(0, 0, 'left', map)).toBe(false))
   test('выход за границу: y < 0', () => expect(canMove(0, 0, 'up', map)).toBe(false))
-  test('выход за границу: x >= 30', () => expect(canMove(29, 0, 'right', map)).toBe(false))
-  test('выход за границу: y >= 30', () => expect(canMove(0, 29, 'down', map)).toBe(false))
+  // Was hardcoded to 30/29 — stale since the Initial commit, which already
+  // had generateMap() at size=32 (confirmed via git log -p). Using
+  // map.width/height directly so this can't drift from the real map size
+  // again.
+  test('выход за границу: x >= map.width', () =>
+    expect(canMove(map.width - 1, 0, 'right', map)).toBe(false))
+  test('выход за границу: y >= map.height', () =>
+    expect(canMove(0, map.height - 1, 'down', map)).toBe(false))
 
   test('движение в BUILDING → false', () => {
     // Конструируем минимальную карту с BUILDING справа от INTERSECTION

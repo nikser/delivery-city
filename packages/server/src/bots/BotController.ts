@@ -132,11 +132,7 @@ export class BotController {
       const order = orders[player.carryingOrderId]
       if (order) {
         botState.phase = 'moving_to_delivery'
-        botState.path = this.findPath(
-          { x: player.tileX, y: player.tileY },
-          order.deliveryTile,
-          avoid,
-        )
+        botState.path = this.bfs({ x: player.tileX, y: player.tileY }, order.deliveryTile, avoid)
       }
     } else {
       // Ищем ближайший доступный заказ
@@ -150,7 +146,7 @@ export class BotController {
       // Ближайший по длине BFS пути
       let best: { order: OrderState; path: Array<{ x: number; y: number }> } | null = null
       for (const order of available) {
-        const path = this.findPath({ x: player.tileX, y: player.tileY }, order.pickupTile, avoid)
+        const path = this.bfs({ x: player.tileX, y: player.tileY }, order.pickupTile, avoid)
         if (path.length > 0 && (!best || path.length < best.path.length)) {
           best = { order, path }
         }
@@ -167,8 +163,14 @@ export class BotController {
     }
   }
 
-  // A* по тайловой карте с учётом направлений дорог
-  private findPath(
+  // A* по тайловой карте с учётом направлений дорог.
+  // Renamed from findPath -> bfs and made public: BotController.test.ts
+  // was written from day one against a public `bfs` method that never
+  // existed (confirmed via git log -p — Initial commit already had
+  // `findPath`, private). Per discussion, renaming the real method to
+  // match the test's intent, rather than rewriting the test to go through
+  // `tick()`/`updateBotState` indirectly.
+  bfs(
     from: { x: number; y: number },
     to: { x: number; y: number },
     avoid?: { x: number; y: number },
@@ -262,7 +264,7 @@ export class BotController {
       (i) => i.x !== player.tileX || i.y !== player.tileY,
     )
     const target = candidates[Math.floor(Math.random() * candidates.length)]
-    botState.path = this.findPath({ x: player.tileX, y: player.tileY }, target, avoid)
+    botState.path = this.bfs({ x: player.tileX, y: player.tileY }, target, avoid)
   }
 
   hasBot(id: string): boolean {
