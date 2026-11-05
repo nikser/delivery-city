@@ -1,5 +1,5 @@
 # ── Stage 1: Build ───────────────────────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /app
 
 # Copy manifests first for better layer caching
@@ -20,7 +20,7 @@ COPY packages/server/ ./packages/server/
 RUN npm run build
 
 # ── Stage 2: Production ───────────────────────────────────────────────────────
-FROM node:20-alpine AS production
+FROM node:26-alpine AS production
 WORKDIR /app
 
 COPY package.json package-lock.json ./
