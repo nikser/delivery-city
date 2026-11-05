@@ -1,12 +1,7 @@
 export type Direction = 'up' | 'down' | 'left' | 'right' | 'idle'
 
 export type TileType =
-  | 'ROAD_EAST'
-  | 'ROAD_WEST'
-  | 'ROAD_SOUTH'
-  | 'ROAD_NORTH'
-  | 'INTERSECTION'
-  | 'BUILDING'
+  'ROAD_EAST' | 'ROAD_WEST' | 'ROAD_SOUTH' | 'ROAD_NORTH' | 'INTERSECTION' | 'BUILDING'
 
 export interface Tile {
   type: TileType
@@ -74,17 +69,41 @@ export interface ClientToServerEvents {
 }
 
 export interface ServerToClientEvents {
-  'room:created': (data: { code: string; players: Array<{ id: string; nickname: string; isBot: boolean }>; difficulty: BotDifficulty }) => void
-  'room:joined': (data: { code: string; players: Array<{ id: string; nickname: string; isBot: boolean }>; difficulty: BotDifficulty; phase: 'lobby' | 'playing' | 'results' }) => void
+  'room:created': (data: {
+    code: string
+    players: Array<{ id: string; nickname: string; isBot: boolean }>
+    difficulty: BotDifficulty
+  }) => void
+  'room:joined': (data: {
+    code: string
+    players: Array<{ id: string; nickname: string; isBot: boolean }>
+    difficulty: BotDifficulty
+    phase: 'lobby' | 'playing' | 'results'
+  }) => void
   'room:error': (data: { message: string }) => void
-  'lobby:update': (data: { players: Array<{ id: string; nickname: string; isBot: boolean }>; difficulty: BotDifficulty }) => void
+  'lobby:update': (data: {
+    players: Array<{ id: string; nickname: string; isBot: boolean }>
+    difficulty: BotDifficulty
+  }) => void
   'game:start': (data: { map: MapData; state: GameState }) => void
-  'game:tick': (data: { tick: number; players: Record<string, PlayerState>; orders: Record<string, OrderState>; sessionTimeLeft: number }) => void
+  'game:tick': (data: {
+    tick: number
+    players: Record<string, PlayerState>
+    orders: Record<string, OrderState>
+    sessionTimeLeft: number
+  }) => void
   'order:spawned': (data: { order: OrderState }) => void
   'order:pickedUp': (data: { orderId: string; playerId: string }) => void
-  'order:delivered': (data: { orderId: string; playerId: string; score: number; bonusScore: number }) => void
+  'order:delivered': (data: {
+    orderId: string
+    playerId: string
+    score: number
+    bonusScore: number
+  }) => void
   'order:expired': (data: { orderId: string }) => void
-  'session:end': (data: { results: Array<{ id: string; nickname: string; score: number; deliveries: number }> }) => void
+  'session:end': (data: {
+    results: Array<{ id: string; nickname: string; score: number; deliveries: number }>
+  }) => void
   'player:disconnected': (data: { playerId: string }) => void
 }
 

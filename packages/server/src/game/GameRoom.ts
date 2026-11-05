@@ -17,7 +17,9 @@ import { canMove, applyDirection } from './MovementSystem'
 import { calculateDeliveryScore } from './ScoreSystem'
 import { BotController } from '../bots/BotController'
 
-const PLAYER_COLORS = [0xc24040, 0x4a8a4a, 0x4060a8, 0xb8a030, 0xa83870, 0x38808a, 0xc06828, 0x7038a0]
+const PLAYER_COLORS = [
+  0xc24040, 0x4a8a4a, 0x4060a8, 0xb8a030, 0xa83870, 0x38808a, 0xc06828, 0x7038a0,
+]
 
 export class GameRoom {
   readonly id: string
@@ -37,7 +39,7 @@ export class GameRoom {
 
   constructor(
     private io: Server,
-    private roomId: string
+    private roomId: string,
   ) {
     this.id = roomId
     this.map = generateMap()
@@ -118,9 +120,18 @@ export class GameRoom {
   }
 
   private clearAllTimers(): void {
-    if (this.gameLoopInterval) { clearInterval(this.gameLoopInterval); this.gameLoopInterval = null }
-    if (this.sessionTimerInterval) { clearInterval(this.sessionTimerInterval); this.sessionTimerInterval = null }
-    if (this.resetTimeout) { clearTimeout(this.resetTimeout); this.resetTimeout = null }
+    if (this.gameLoopInterval) {
+      clearInterval(this.gameLoopInterval)
+      this.gameLoopInterval = null
+    }
+    if (this.sessionTimerInterval) {
+      clearInterval(this.sessionTimerInterval)
+      this.sessionTimerInterval = null
+    }
+    if (this.resetTimeout) {
+      clearTimeout(this.resetTimeout)
+      this.resetTimeout = null
+    }
   }
 
   startSession(): void {
@@ -128,7 +139,9 @@ export class GameRoom {
     this.state.phase = 'playing'
     this.state.sessionTimeLeft = SESSION_DURATION
 
-    const targetCount = this.orderManager.getTargetOrderCount(Object.keys(this.state.players).length)
+    const targetCount = this.orderManager.getTargetOrderCount(
+      Object.keys(this.state.players).length,
+    )
     for (let i = 0; i < targetCount; i++) {
       const order = this.orderManager.spawnOrder(this.state.orders)
       this.state.orders[order.id] = order
@@ -152,7 +165,11 @@ export class GameRoom {
   }
 
   getLobbyPlayers(): Array<{ id: string; nickname: string; isBot: boolean }> {
-    return Object.values(this.state.players).map((p) => ({ id: p.id, nickname: p.nickname, isBot: p.isBot }))
+    return Object.values(this.state.players).map((p) => ({
+      id: p.id,
+      nickname: p.nickname,
+      isBot: p.isBot,
+    }))
   }
 
   getLobbyDifficulty(): BotDifficulty {
@@ -212,7 +229,7 @@ export class GameRoom {
     if (canMove(player.tileX, player.tileY, direction, this.map)) {
       const { x: toX, y: toY } = applyDirection(player.tileX, player.tileY, direction)
       const occupied = Object.values(this.state.players).some(
-        (other) => other.id !== player.id && other.tileX === toX && other.tileY === toY
+        (other) => other.id !== player.id && other.tileX === toX && other.tileY === toY,
       )
       if (!occupied) {
         player.direction = direction
@@ -252,7 +269,10 @@ export class GameRoom {
         order.deliveryTile.x === player.tileX &&
         order.deliveryTile.y === player.tileY
       ) {
-        const { base, speedBonus, total } = calculateDeliveryScore(order.pickedUpAt!, ORDER_TTL_HELD)
+        const { base, speedBonus, total } = calculateDeliveryScore(
+          order.pickedUpAt!,
+          ORDER_TTL_HELD,
+        )
         this.state.orders[order.id] = this.orderManager.completeOrder(order)
         player.carryingOrderId = null
         player.score += total
@@ -294,7 +314,7 @@ export class GameRoom {
 
   private spawnMissingOrders(): void {
     const active = Object.values(this.state.orders).filter(
-      (o) => o.status === 'available' || o.status === 'assigned'
+      (o) => o.status === 'available' || o.status === 'assigned',
     )
     const target = this.orderManager.getTargetOrderCount(Object.keys(this.state.players).length)
     const toSpawn = target - active.length

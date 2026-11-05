@@ -51,7 +51,7 @@ export class BotController {
   // Вызывается каждый тик. Возвращает Map<botId, Direction>
   tick(
     players: Record<string, PlayerState>,
-    orders: Record<string, OrderState>
+    orders: Record<string, OrderState>,
   ): Map<string, Direction> {
     const inputs = new Map<string, Direction>()
     const now = Date.now()
@@ -69,7 +69,7 @@ export class BotController {
 
       const orderChanged = player.carryingOrderId !== botState.carryingOrderId
       const stuckThreshold = player.carryingOrderId ? 3000 : 2000
-      const stuck = !player.isMoving && (now - botState.lastMoveTime) > stuckThreshold
+      const stuck = !player.isMoving && now - botState.lastMoveTime > stuckThreshold
 
       if (!player.isMoving) {
         if (stuck) {
@@ -94,9 +94,11 @@ export class BotController {
       }
 
       // Сдвигаем путь пока текущий тайл (включая destination при движении) уже пройден
-      while (botState.path.length > 0 &&
+      while (
+        botState.path.length > 0 &&
         botState.path[0].x === player.tileX &&
-        botState.path[0].y === player.tileY) {
+        botState.path[0].y === player.tileY
+      ) {
         botState.path.shift()
       }
 
@@ -121,7 +123,7 @@ export class BotController {
     _id: string,
     botState: BotState,
     player: PlayerState,
-    orders: Record<string, OrderState>
+    orders: Record<string, OrderState>,
   ): void {
     const avoid = botState.avoidTile ?? undefined
 
@@ -133,12 +135,12 @@ export class BotController {
         botState.path = this.findPath(
           { x: player.tileX, y: player.tileY },
           order.deliveryTile,
-          avoid
+          avoid,
         )
       }
     } else {
       // Ищем ближайший доступный заказ
-      const available = Object.values(orders).filter(o => o.status === 'available')
+      const available = Object.values(orders).filter((o) => o.status === 'available')
       if (available.length === 0) {
         botState.phase = 'idle'
         this.wanderToRandom(botState, player, avoid)
@@ -146,13 +148,9 @@ export class BotController {
       }
 
       // Ближайший по длине BFS пути
-      let best: { order: OrderState; path: Array<{x:number;y:number}> } | null = null
+      let best: { order: OrderState; path: Array<{ x: number; y: number }> } | null = null
       for (const order of available) {
-        const path = this.findPath(
-          { x: player.tileX, y: player.tileY },
-          order.pickupTile,
-          avoid
-        )
+        const path = this.findPath({ x: player.tileX, y: player.tileY }, order.pickupTile, avoid)
         if (path.length > 0 && (!best || path.length < best.path.length)) {
           best = { order, path }
         }
@@ -173,7 +171,7 @@ export class BotController {
   private findPath(
     from: { x: number; y: number },
     to: { x: number; y: number },
-    avoid?: { x: number; y: number }
+    avoid?: { x: number; y: number },
   ): Array<{ x: number; y: number }> {
     const key = (x: number, y: number) => `${x},${y}`
     const h = (x: number, y: number) => Math.abs(x - to.x) + Math.abs(y - to.y)
@@ -183,7 +181,7 @@ export class BotController {
     type Node = { f: number; g: number; x: number; y: number }
     const open = new Map<string, Node>()
     const closed = new Set<string>()
-    const cameFrom = new Map<string, string>()  // key → prevKey
+    const cameFrom = new Map<string, string>() // key → prevKey
 
     const startKey = key(from.x, from.y)
     open.set(startKey, { f: h(from.x, from.y), g: 0, x: from.x, y: from.y })
@@ -193,7 +191,10 @@ export class BotController {
       let bestKey = ''
       let bestNode: Node | null = null
       for (const [k, node] of open) {
-        if (!bestNode || node.f < bestNode.f) { bestKey = k; bestNode = node }
+        if (!bestNode || node.f < bestNode.f) {
+          bestKey = k
+          bestNode = node
+        }
       }
       open.delete(bestKey)
       closed.add(bestKey)
@@ -216,7 +217,8 @@ export class BotController {
       if (!tile) continue
 
       for (const dir of getAllowedDirections(tile)) {
-        let nx = x, ny = y
+        let nx = x,
+          ny = y
         if (dir === 'right') nx++
         else if (dir === 'left') nx--
         else if (dir === 'down') ny++
@@ -239,13 +241,10 @@ export class BotController {
       }
     }
 
-    return []  // путь не найден
+    return [] // путь не найден
   }
 
-  private getDirectionTo(
-    fromX: number, fromY: number,
-    toX: number, toY: number
-  ): Direction | null {
+  private getDirectionTo(fromX: number, fromY: number, toX: number, toY: number): Direction | null {
     if (toX > fromX) return 'right'
     if (toX < fromX) return 'left'
     if (toY > fromY) return 'down'
@@ -253,10 +252,14 @@ export class BotController {
     return null
   }
 
-  private wanderToRandom(botState: BotState, player: PlayerState, avoid?: { x: number; y: number }): void {
+  private wanderToRandom(
+    botState: BotState,
+    player: PlayerState,
+    avoid?: { x: number; y: number },
+  ): void {
     if (this.intersections.length === 0) return
     const candidates = this.intersections.filter(
-      i => i.x !== player.tileX || i.y !== player.tileY
+      (i) => i.x !== player.tileX || i.y !== player.tileY,
     )
     const target = candidates[Math.floor(Math.random() * candidates.length)]
     botState.path = this.findPath({ x: player.tileX, y: player.tileY }, target, avoid)

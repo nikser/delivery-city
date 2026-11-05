@@ -7,13 +7,13 @@ type DemoTile = 'B' | 'RE' | 'RW' | 'RS' | 'RN' | 'IN'
 
 // 7×7 mini-map layout (B=building, RE/RW/RS/RN=road, IN=intersection)
 const DEMO_MAP: DemoTile[][] = [
-  ['B',  'B',  'RN', 'B',  'B',  'RS', 'B' ],
-  ['B',  'B',  'RN', 'B',  'B',  'RS', 'B' ],
+  ['B', 'B', 'RN', 'B', 'B', 'RS', 'B'],
+  ['B', 'B', 'RN', 'B', 'B', 'RS', 'B'],
   ['RE', 'RE', 'IN', 'RE', 'RE', 'IN', 'RE'],
-  ['B',  'B',  'RN', 'B',  'B',  'RS', 'B' ],
-  ['B',  'B',  'RN', 'B',  'B',  'RS', 'B' ],
+  ['B', 'B', 'RN', 'B', 'B', 'RS', 'B'],
+  ['B', 'B', 'RN', 'B', 'B', 'RS', 'B'],
   ['RW', 'RW', 'IN', 'RW', 'RW', 'IN', 'RW'],
-  ['B',  'B',  'RN', 'B',  'B',  'RS', 'B' ],
+  ['B', 'B', 'RN', 'B', 'B', 'RS', 'B'],
 ]
 
 export class RulesScene extends Phaser.Scene {
@@ -65,20 +65,26 @@ export class RulesScene extends Phaser.Scene {
     ) => this.add.text(x, y, label, { fontFamily: 'monospace', ...style })
 
     // ── Title ─────────────────────────────────────────────────────────
-    txt(t('rulesTitle'), cx, curY, { fontSize: '22px', color: '#ffdd00', align: 'center' }).setOrigin(0.5, 0)
+    txt(t('rulesTitle'), cx, curY, {
+      fontSize: '22px',
+      color: '#ffdd00',
+      align: 'center',
+    }).setOrigin(0.5, 0)
     curY += 34
 
     this.addSeparator(px + 12, curY, PW - 24)
     curY += 14
 
     // ── Goal ──────────────────────────────────────────────────────────
-    const goalText = this.add.text(cx, curY, t('rulesGoal'), {
-      fontFamily: 'monospace',
-      fontSize: '13px',
-      color: '#ccddcc',
-      align: 'center',
-      wordWrap: { width: PW - 32 },
-    }).setOrigin(0.5, 0)
+    const goalText = this.add
+      .text(cx, curY, t('rulesGoal'), {
+        fontFamily: 'monospace',
+        fontSize: '13px',
+        color: '#ccddcc',
+        align: 'center',
+        wordWrap: { width: PW - 32 },
+      })
+      .setOrigin(0.5, 0)
     curY += goalText.height + 14
 
     this.addSeparator(px + 12, curY, PW - 24)
@@ -122,14 +128,26 @@ export class RulesScene extends Phaser.Scene {
     curY += mapH + 12
 
     // Map legend list
-    const legendItems: Array<{ drawFn: (g: Phaser.GameObjects.Graphics, x: number, y: number) => void; label: string }> = [
-      { drawFn: (g, x, y) => this.drawDemoTileIcon(g, 'B',  x, y, S), label: t('rulesBuilding') },
-      { drawFn: (g, x, y) => this.drawDemoTileIcon(g, 'RE', x, y, S), label: t('rulesRoad')     },
-      { drawFn: (g, x, y) => this.drawDemoTileIcon(g, 'IN', x, y, S), label: t('rulesInter')    },
-      { drawFn: (g, x, y) => this.drawDemoCar(g, x + S / 2, y + S / 2, 0xc24040),              label: t('rulesCar')      },
-      { drawFn: (g, x, y) => this.drawDemoBag(g, x + S / 2, y + S / 2),                         label: t('rulesPickup')   },
-      { drawFn: (g, x, y) => this.drawDemoDelivery(g, x + S / 2, y + S / 2, 0xff3333),          label: t('rulesMyDel')    },
-      { drawFn: (g, x, y) => this.drawDemoDelivery(g, x + S / 2, y + S / 2, 0x3366ff),          label: t('rulesOtherDel') },
+    const legendItems: Array<{
+      drawFn: (g: Phaser.GameObjects.Graphics, x: number, y: number) => void
+      label: string
+    }> = [
+      { drawFn: (g, x, y) => this.drawDemoTileIcon(g, 'B', x, y, S), label: t('rulesBuilding') },
+      { drawFn: (g, x, y) => this.drawDemoTileIcon(g, 'RE', x, y, S), label: t('rulesRoad') },
+      { drawFn: (g, x, y) => this.drawDemoTileIcon(g, 'IN', x, y, S), label: t('rulesInter') },
+      {
+        drawFn: (g, x, y) => this.drawDemoCar(g, x + S / 2, y + S / 2, 0xc24040),
+        label: t('rulesCar'),
+      },
+      { drawFn: (g, x, y) => this.drawDemoBag(g, x + S / 2, y + S / 2), label: t('rulesPickup') },
+      {
+        drawFn: (g, x, y) => this.drawDemoDelivery(g, x + S / 2, y + S / 2, 0xff3333),
+        label: t('rulesMyDel'),
+      },
+      {
+        drawFn: (g, x, y) => this.drawDemoDelivery(g, x + S / 2, y + S / 2, 0x3366ff),
+        label: t('rulesOtherDel'),
+      },
     ]
 
     const COL_W = (PW - 24) / 2
@@ -150,10 +168,12 @@ export class RulesScene extends Phaser.Scene {
     // ── Controls ──────────────────────────────────────────────────────
     txt(t('rulesControls'), cx, curY, { fontSize: '14px', color: '#00ccaa' }).setOrigin(0.5, 0)
     curY += 22
-    ;[t('rulesKeys'), t('rulesJoystick'), t('rulesMouseJoystick'), t('rulesZoom')].forEach((line) => {
-      txt(`• ${line}`, px + 20, curY, { fontSize: '12px', color: '#aaccaa' })
-      curY += 20
-    })
+    ;[t('rulesKeys'), t('rulesJoystick'), t('rulesMouseJoystick'), t('rulesZoom')].forEach(
+      (line) => {
+        txt(`• ${line}`, px + 20, curY, { fontSize: '12px', color: '#aaccaa' })
+        curY += 20
+      },
+    )
     curY += 6
 
     this.addSeparator(px + 12, curY, PW - 24)
@@ -167,10 +187,18 @@ export class RulesScene extends Phaser.Scene {
 
     // ── Close button ──────────────────────────────────────────────────
     const closeY = Math.max(curY + 8, py + PH - 66)
-    createButton(this, cx, closeY, t('rulesClose'), true, () => {
-      this.scene.stop()
-      this.scene.resume(this.callerKey)
-    }, { width: 200, height: 44, fontSize: '18px' })
+    createButton(
+      this,
+      cx,
+      closeY,
+      t('rulesClose'),
+      true,
+      () => {
+        this.scene.stop()
+        this.scene.resume(this.callerKey)
+      },
+      { width: 200, height: 44, fontSize: '18px' },
+    )
 
     // Close on overlay click outside panel
     overlay.on('pointerdown', (_ptr: Phaser.Input.Pointer) => {
@@ -200,8 +228,14 @@ export class RulesScene extends Phaser.Scene {
     g.lineBetween(x, y, x + w, y)
   }
 
-  private drawDemoTile(g: Phaser.GameObjects.Graphics, tile: DemoTile, x: number, y: number, S: number): void {
-    const ASPHALT  = 0x585850
+  private drawDemoTile(
+    g: Phaser.GameObjects.Graphics,
+    tile: DemoTile,
+    x: number,
+    y: number,
+    S: number,
+  ): void {
+    const ASPHALT = 0x585850
     const SIDEWALK = 0x9a9080
     const SW = 1
 
@@ -216,40 +250,58 @@ export class RulesScene extends Phaser.Scene {
       }
       case 'RE':
       case 'RW': {
-        g.fillStyle(ASPHALT);  g.fillRect(x, y, S, S)
-        g.fillStyle(SIDEWALK); g.fillRect(x, y, S, SW); g.fillRect(x, y + S - SW, S, SW)
-        const mx = x + S / 2, my = y + S / 2
+        g.fillStyle(ASPHALT)
+        g.fillRect(x, y, S, S)
+        g.fillStyle(SIDEWALK)
+        g.fillRect(x, y, S, SW)
+        g.fillRect(x, y + S - SW, S, SW)
+        const mx = x + S / 2,
+          my = y + S / 2
         g.fillStyle(0xffffff, 0.28)
         if (tile === 'RE') g.fillTriangle(mx + 5, my, mx - 3, my - 3, mx - 3, my + 3)
-        else               g.fillTriangle(mx - 5, my, mx + 3, my - 3, mx + 3, my + 3)
+        else g.fillTriangle(mx - 5, my, mx + 3, my - 3, mx + 3, my + 3)
         break
       }
       case 'RS':
       case 'RN': {
-        g.fillStyle(ASPHALT);  g.fillRect(x, y, S, S)
-        g.fillStyle(SIDEWALK); g.fillRect(x, y, SW, S); g.fillRect(x + S - SW, y, SW, S)
-        const mx = x + S / 2, my = y + S / 2
+        g.fillStyle(ASPHALT)
+        g.fillRect(x, y, S, S)
+        g.fillStyle(SIDEWALK)
+        g.fillRect(x, y, SW, S)
+        g.fillRect(x + S - SW, y, SW, S)
+        const mx = x + S / 2,
+          my = y + S / 2
         g.fillStyle(0xffffff, 0.28)
         if (tile === 'RS') g.fillTriangle(mx, my + 5, mx - 3, my - 3, mx + 3, my - 3)
-        else               g.fillTriangle(mx, my - 5, mx - 3, my + 3, mx + 3, my + 3)
+        else g.fillTriangle(mx, my - 5, mx - 3, my + 3, mx + 3, my + 3)
         break
       }
       case 'IN': {
-        g.fillStyle(ASPHALT);  g.fillRect(x, y, S, S)
+        g.fillStyle(ASPHALT)
+        g.fillRect(x, y, S, S)
         g.fillStyle(SIDEWALK)
-        g.fillRect(x, y, SW, SW); g.fillRect(x + S - SW, y, SW, SW)
-        g.fillRect(x, y + S - SW, SW, SW); g.fillRect(x + S - SW, y + S - SW, SW, SW)
+        g.fillRect(x, y, SW, SW)
+        g.fillRect(x + S - SW, y, SW, SW)
+        g.fillRect(x, y + S - SW, SW, SW)
+        g.fillRect(x + S - SW, y + S - SW, SW, SW)
         break
       }
     }
   }
 
-  private drawDemoTileIcon(g: Phaser.GameObjects.Graphics, tile: DemoTile, x: number, y: number, S: number): void {
+  private drawDemoTileIcon(
+    g: Phaser.GameObjects.Graphics,
+    tile: DemoTile,
+    x: number,
+    y: number,
+    S: number,
+  ): void {
     this.drawDemoTile(g, tile, x, y, S)
   }
 
   private drawDemoCar(g: Phaser.GameObjects.Graphics, cx: number, cy: number, color: number): void {
-    const W = 12, H = 8
+    const W = 12,
+      H = 8
     g.fillStyle(0x000000, 0.4)
     g.fillEllipse(cx + 1, cy + 2, W + 2, H * 0.4)
     g.fillStyle(0x111111)
@@ -267,20 +319,37 @@ export class RulesScene extends Phaser.Scene {
   }
 
   private drawDemoBag(g: Phaser.GameObjects.Graphics, cx: number, cy: number): void {
-    const W = 9, H = 11
-    const bx = cx - W / 2, by = cy - H / 2
-    g.fillStyle(0xc8913a); g.fillRect(bx, by, W, H)
-    g.fillStyle(0xddb055); g.fillRect(bx, by, W, 3)
-    g.lineStyle(1, 0x7a5018, 0.9); g.strokeRect(bx, by, W, H)
+    const W = 9,
+      H = 11
+    const bx = cx - W / 2,
+      by = cy - H / 2
+    g.fillStyle(0xc8913a)
+    g.fillRect(bx, by, W, H)
+    g.fillStyle(0xddb055)
+    g.fillRect(bx, by, W, 3)
+    g.lineStyle(1, 0x7a5018, 0.9)
+    g.strokeRect(bx, by, W, H)
     g.lineStyle(1.5, 0x7a5018, 1)
-    g.beginPath(); g.arc(bx + 3, by, 2, 0, Math.PI, true); g.strokePath()
-    g.beginPath(); g.arc(bx + W - 3, by, 2, 0, Math.PI, true); g.strokePath()
+    g.beginPath()
+    g.arc(bx + 3, by, 2, 0, Math.PI, true)
+    g.strokePath()
+    g.beginPath()
+    g.arc(bx + W - 3, by, 2, 0, Math.PI, true)
+    g.strokePath()
   }
 
-  private drawDemoDelivery(g: Phaser.GameObjects.Graphics, cx: number, cy: number, color: number): void {
-    g.fillStyle(color, 0.2); g.fillRect(cx - 7, cy - 7, 14, 14)
-    g.fillStyle(color, 1);   g.fillRect(cx - 5, cy - 5, 10, 10)
-    g.lineStyle(1.5, 0xffffff, 0.9); g.strokeRect(cx - 5, cy - 5, 10, 10)
+  private drawDemoDelivery(
+    g: Phaser.GameObjects.Graphics,
+    cx: number,
+    cy: number,
+    color: number,
+  ): void {
+    g.fillStyle(color, 0.2)
+    g.fillRect(cx - 7, cy - 7, 14, 14)
+    g.fillStyle(color, 1)
+    g.fillRect(cx - 5, cy - 5, 10, 10)
+    g.lineStyle(1.5, 0xffffff, 0.9)
+    g.strokeRect(cx - 5, cy - 5, 10, 10)
     g.lineStyle(1.5, 0xffffff, 0.8)
     g.lineBetween(cx - 3, cy - 3, cx + 3, cy + 3)
     g.lineBetween(cx + 3, cy - 3, cx - 3, cy + 3)

@@ -26,29 +26,36 @@ export class WelcomeScene extends Phaser.Scene {
     this.createDrivingCar(width, height * 0.06)
 
     // Title — 40px to prevent clipping on narrow screens
-    this.add.text(width / 2, height * 0.13, 'DELIVERY CITY', {
-      fontFamily: 'monospace',
-      fontSize: '40px',
-      color: '#ffdd00',
-      stroke: '#aa8800',
-      strokeThickness: 4,
-    }).setOrigin(0.5)
+    this.add
+      .text(width / 2, height * 0.13, 'DELIVERY CITY', {
+        fontFamily: 'monospace',
+        fontSize: '40px',
+        color: '#ffdd00',
+        stroke: '#aa8800',
+        strokeThickness: 4,
+      })
+      .setOrigin(0.5)
 
     // Subtitle — brighter
-    this.add.text(width / 2, height * 0.21, t('tagline'), {
-      fontFamily: 'monospace',
-      fontSize: '16px',
-      color: '#ffee88',
-    }).setOrigin(0.5)
+    this.add
+      .text(width / 2, height * 0.21, t('tagline'), {
+        fontFamily: 'monospace',
+        fontSize: '16px',
+        color: '#ffee88',
+      })
+      .setOrigin(0.5)
 
     // How to play button — bottom-left
-    const helpBtn = this.add.text(16, height - 16, t('howToPlay'), {
-      fontFamily: 'monospace',
-      fontSize: '14px',
-      color: '#00ccaa',
-    }).setOrigin(0, 1).setInteractive({ useHandCursor: true })
+    const helpBtn = this.add
+      .text(16, height - 16, t('howToPlay'), {
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        color: '#00ccaa',
+      })
+      .setOrigin(0, 1)
+      .setInteractive({ useHandCursor: true })
     helpBtn.on('pointerover', () => helpBtn.setColor('#ffffff'))
-    helpBtn.on('pointerout',  () => helpBtn.setColor('#00ccaa'))
+    helpBtn.on('pointerout', () => helpBtn.setColor('#00ccaa'))
     helpBtn.on('pointerdown', () => {
       this.codeInput.style.display = 'none'
       this.scene.pause()
@@ -66,18 +73,22 @@ export class WelcomeScene extends Phaser.Scene {
     })
 
     // Divider
-    this.add.text(width / 2, height * 0.37, t('or'), {
-      fontFamily: 'monospace',
-      fontSize: '14px',
-      color: '#a8a8df',
-    }).setOrigin(0.5)
+    this.add
+      .text(width / 2, height * 0.37, t('or'), {
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        color: '#a8a8df',
+      })
+      .setOrigin(0.5)
 
     // Code input label — close to the input
-    this.add.text(width / 2, height * 0.43, t('enterCode'), {
-      fontFamily: 'monospace',
-      fontSize: '16px',
-      color: '#aaaacc',
-    }).setOrigin(0.5)
+    this.add
+      .text(width / 2, height * 0.43, t('enterCode'), {
+        fontFamily: 'monospace',
+        fontSize: '16px',
+        color: '#aaaacc',
+      })
+      .setOrigin(0.5)
 
     // HTML input for room code
     this.codeInput = document.createElement('input')
@@ -122,11 +133,13 @@ export class WelcomeScene extends Phaser.Scene {
     })
 
     // Error text
-    this.errorText = this.add.text(width / 2, height * 0.72, '', {
-      fontFamily: 'monospace',
-      fontSize: '16px',
-      color: '#ff4444',
-    }).setOrigin(0.5)
+    this.errorText = this.add
+      .text(width / 2, height * 0.72, '', {
+        fontFamily: 'monospace',
+        fontSize: '16px',
+        color: '#ff4444',
+      })
+      .setOrigin(0.5)
 
     // Language switcher
     addLangSwitcher(this, () => {
@@ -207,7 +220,7 @@ export class WelcomeScene extends Phaser.Scene {
 
     const inputWidth = 140 * scaleX
     const inputX = rect.left + (width / 2) * scaleX - inputWidth / 2
-    const inputY = rect.top + height * 0.50 * scaleY
+    const inputY = rect.top + height * 0.5 * scaleY
 
     this.codeInput.style.left = `${inputX}px`
     this.codeInput.style.top = `${inputY}px`

@@ -54,11 +54,17 @@ export function isWalkable(tile: TileType): boolean {
 
 export function getAllowedDirections(tile: TileType): Direction[] {
   switch (tile) {
-    case 'ROAD_EAST':     return ['right']
-    case 'ROAD_WEST':     return ['left']
-    case 'ROAD_SOUTH':    return ['down']
-    case 'ROAD_NORTH':    return ['up']
-    case 'INTERSECTION':  return ['up', 'down', 'left', 'right']
-    case 'BUILDING':      return []
+    case 'ROAD_EAST':
+      return ['right']
+    case 'ROAD_WEST':
+      return ['left']
+    case 'ROAD_SOUTH':
+      return ['down']
+    case 'ROAD_NORTH':
+      return ['up']
+    case 'INTERSECTION':
+      return ['up', 'down', 'left', 'right']
+    case 'BUILDING':
+      return []
   }
 }

@@ -4,7 +4,12 @@ import { PlayerState, OrderState } from '../../shared/src/index'
 
 const map = generateMap()
 
-function makePlayer(id: string, x: number, y: number, carryingOrderId: string | null = null): PlayerState {
+function makePlayer(
+  id: string,
+  x: number,
+  y: number,
+  carryingOrderId: string | null = null,
+): PlayerState {
   return {
     id,
     nickname: 'Bot',
@@ -18,16 +23,18 @@ function makePlayer(id: string, x: number, y: number, carryingOrderId: string | 
     carryingOrderId,
     score: 0,
     isBot: true,
-    color: 0xFF4444,
+    color: 0xff4444,
   }
 }
 
 function makeOrder(
   id: string,
-  px: number, py: number,
-  dx: number, dy: number,
+  px: number,
+  py: number,
+  dx: number,
+  dy: number,
   status: OrderState['status'] = 'available',
-  assignedPlayerId: string | null = null
+  assignedPlayerId: string | null = null,
 ): OrderState {
   return {
     id,
