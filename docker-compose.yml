@@ -1,7 +1,12 @@
 services:
   app:
     build: .
-    image: nixerr/delivery-city:latest
+    # CD writes IMAGE_TAG/GITHUB_REPOSITORY into .env on the VPS before
+    # `docker compose pull` — see .github/workflows/cd.yml. `build: .`
+    # above still makes `docker compose up --build` work locally without
+    # any .env (the old manual Docker Hub push path via package.json's
+    # build:image/push:image scripts is unaffected by this).
+    image: ghcr.io/${GITHUB_REPOSITORY:-nikser/delivery-city}:${IMAGE_TAG:-latest}
     ports:
       - "3001:3001"
     restart: unless-stopped
