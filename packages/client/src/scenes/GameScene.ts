@@ -8,7 +8,7 @@ import type {
   Direction,
   TileType,
 } from '@delivery-city/shared'
-import { TILE_SIZE, MOVE_DURATION } from '@delivery-city/shared'
+import { TILE_SIZE } from '@delivery-city/shared'
 import { t } from '../i18n'
 import {
   trackSceneEnter,

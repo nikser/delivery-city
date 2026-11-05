@@ -201,7 +201,7 @@ export class RulesScene extends Phaser.Scene {
     )
 
     // Close on overlay click outside panel
-    overlay.on('pointerdown', (_ptr: Phaser.Input.Pointer) => {
+    overlay.on('pointerdown', () => {
       this.scene.stop()
       this.scene.resume(this.callerKey)
     })

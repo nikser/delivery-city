@@ -11,7 +11,6 @@ import {
   BOT_SPEEDS,
 } from '@delivery-city/shared'
 import { generateMap } from '../map/MapGenerator'
-import { generateId } from './IdGenerator'
 import { OrderManager } from './OrderManager'
 import { canMove, applyDirection } from './MovementSystem'
 import { calculateDeliveryScore } from './ScoreSystem'
