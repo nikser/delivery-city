@@ -1,0 +1,34 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install (full workspace, needed for shared/server/client/tests)
+        run: npm ci
+
+      - name: Build (shared -> server -> client, same order as npm run build)
+        run: npm run build
+
+      - name: Test (packages/tests, jest)
+        run: npm run test
+
+  docker-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # No push — just confirms the Dockerfile still builds against current
+      # source, matching the other repos' docker-validate job.
+      - name: Build production image
+        run: docker build -t delivery-city:ci-check .
