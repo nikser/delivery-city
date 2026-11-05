@@ -43,8 +43,12 @@ export function createButton(
     bg.lineStyle(2, currentBorderColor, 1)
     bg.fillStyle(
       isFilled
-        ? (hover ? currentHoverColor : currentFillColor)
-        : (hover ? currentFillColor : 0x111a22),
+        ? hover
+          ? currentHoverColor
+          : currentFillColor
+        : hover
+          ? currentFillColor
+          : 0x111a22,
       1,
     )
     bg.fillRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight)
@@ -52,18 +56,26 @@ export function createButton(
   }
   draw(false)
 
-  const text = scene.add.text(0, 0, label, {
-    fontFamily: 'monospace',
-    fontSize,
-    color: textColor,
-  }).setOrigin(0.5)
+  const text = scene.add
+    .text(0, 0, label, {
+      fontFamily: 'monospace',
+      fontSize,
+      color: textColor,
+    })
+    .setOrigin(0.5)
 
   const container = scene.add.container(x, y, [bg, text])
   container.setSize(btnWidth, btnHeight)
   container.setInteractive({ useHandCursor: true })
 
-  container.on('pointerover', () => { draw(true); text.setColor('#ffffff') })
-  container.on('pointerout', () => { draw(false); text.setColor(currentTextColor) })
+  container.on('pointerover', () => {
+    draw(true)
+    text.setColor('#ffffff')
+  })
+  container.on('pointerout', () => {
+    draw(false)
+    text.setColor(currentTextColor)
+  })
   container.on('pointerdown', onClick)
 
   return {
@@ -75,9 +87,9 @@ export function createButton(
     },
     setDanger: (isDanger: boolean) => {
       currentBorderColor = isDanger ? 0xcc2244 : 0x00ccaa
-      currentTextColor   = isDanger ? '#ff4466' : '#00ff88'
-      currentFillColor   = isDanger ? 0x220011 : 0x003333
-      currentHoverColor  = isDanger ? 0x440022 : 0x005544
+      currentTextColor = isDanger ? '#ff4466' : '#00ff88'
+      currentFillColor = isDanger ? 0x220011 : 0x003333
+      currentHoverColor = isDanger ? 0x440022 : 0x005544
       text.setColor(currentTextColor)
       draw(false)
     },

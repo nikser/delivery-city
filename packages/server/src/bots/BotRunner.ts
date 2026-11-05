@@ -35,9 +35,14 @@ for (let i = 0; i < BOT_COUNT; i++) {
     socket.emit('player:input', { direction: dir, inputSeq: Date.now() })
   })
 
-  socket.on('session:end', (data: { results: Array<{ id: string; nickname: string; score: number; deliveries: number }> }) => {
-    console.log(`${nickname} session ended:`, data.results)
-  })
+  socket.on(
+    'session:end',
+    (data: {
+      results: Array<{ id: string; nickname: string; score: number; deliveries: number }>
+    }) => {
+      console.log(`${nickname} session ended:`, data.results)
+    },
+  )
 }
 
 console.log(`Starting ${BOT_COUNT} bots connecting to ${SERVER_URL}`)

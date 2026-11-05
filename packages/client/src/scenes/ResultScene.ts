@@ -28,13 +28,15 @@ export class ResultScene extends Phaser.Scene {
     const results = this.results
 
     // Title
-    this.add.text(width / 2, height * 0.08, t('roundEnd'), {
-      fontFamily: 'monospace',
-      fontSize: '48px',
-      color: '#ffdd00',
-      stroke: '#aa8800',
-      strokeThickness: 4,
-    }).setOrigin(0.5)
+    this.add
+      .text(width / 2, height * 0.08, t('roundEnd'), {
+        fontFamily: 'monospace',
+        fontSize: '48px',
+        color: '#ffdd00',
+        stroke: '#aa8800',
+        strokeThickness: 4,
+      })
+      .setOrigin(0.5)
 
     // Table headers
     const tableTop = height * 0.22
@@ -93,28 +95,35 @@ export class ResultScene extends Phaser.Scene {
       const newBest = Math.max(myResult.score, prevBest)
       localStorage.setItem('bestScore', String(newBest))
 
-      this.add.text(width / 2, height * 0.78, `${t('myScore')}: ${myResult.score} ${t('pts')}`, {
-        fontFamily: 'monospace',
-        fontSize: '20px',
-        color: '#aaaaff',
-      }).setOrigin(0.5)
+      this.add
+        .text(width / 2, height * 0.78, `${t('myScore')}: ${myResult.score} ${t('pts')}`, {
+          fontFamily: 'monospace',
+          fontSize: '20px',
+          color: '#aaaaff',
+        })
+        .setOrigin(0.5)
 
       const isNewBest = myResult.score > prevBest && myResult.score > 0
-      this.add.text(width / 2, height * 0.84, `${t('bestScore')}: ${newBest}${isNewBest ? ' 🏆' : ''}`, {
-        fontFamily: 'monospace',
-        fontSize: '18px',
-        color: '#ffaa00',
-      }).setOrigin(0.5)
+      this.add
+        .text(width / 2, height * 0.84, `${t('bestScore')}: ${newBest}${isNewBest ? ' 🏆' : ''}`, {
+          fontFamily: 'monospace',
+          fontSize: '18px',
+          color: '#ffaa00',
+        })
+        .setOrigin(0.5)
     }
 
     // Play again button
-    const playBtn = this.add.text(width / 2, height * 0.93, t('playAgain'), {
-      fontFamily: 'monospace',
-      fontSize: '28px',
-      color: '#00ff88',
-      backgroundColor: '#002244',
-      padding: { x: 22, y: 12 },
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true })
+    const playBtn = this.add
+      .text(width / 2, height * 0.93, t('playAgain'), {
+        fontFamily: 'monospace',
+        fontSize: '28px',
+        color: '#00ff88',
+        backgroundColor: '#002244',
+        padding: { x: 22, y: 12 },
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true })
 
     playBtn.on('pointerover', () => playBtn.setColor('#ffffff'))
     playBtn.on('pointerout', () => playBtn.setColor('#00ff88'))

@@ -4,7 +4,12 @@ import { PlayerState, OrderState } from '../../shared/src/index'
 
 const map = generateMap()
 
-function makePlayer(id: string, x: number, y: number, carryingOrderId: string | null = null): PlayerState {
+function makePlayer(
+  id: string,
+  x: number,
+  y: number,
+  carryingOrderId: string | null = null,
+): PlayerState {
   return {
     id,
     nickname: 'Bot',
@@ -13,21 +18,24 @@ function makePlayer(id: string, x: number, y: number, carryingOrderId: string | 
     direction: 'idle',
     isMoving: false,
     moveProgress: 1,
+    moveDuration: 0,
     fromTileX: x,
     fromTileY: y,
     carryingOrderId,
     score: 0,
     isBot: true,
-    color: 0xFF4444,
+    color: 0xff4444,
   }
 }
 
 function makeOrder(
   id: string,
-  px: number, py: number,
-  dx: number, dy: number,
+  px: number,
+  py: number,
+  dx: number,
+  dy: number,
   status: OrderState['status'] = 'available',
-  assignedPlayerId: string | null = null
+  assignedPlayerId: string | null = null,
 ): OrderState {
   return {
     id,
@@ -86,12 +94,13 @@ describe('BotController.bfs', () => {
 })
 
 describe('BotController.tick', () => {
-  test('без заказов: inputs пустой', () => {
+  // Idle bots wander by design (wanderToRandom) — not an empty-inputs case.
+  test('без заказов: бот блуждает (inputs не пустой)', () => {
     const bot = new BotController(map)
     const player = makePlayer('bot1', 0, 0)
     bot.addBot('bot1')
     const inputs = bot.tick({ bot1: player }, {})
-    expect(inputs.has('bot1')).toBe(false)
+    expect(inputs.has('bot1')).toBe(true)
   })
 
   test('есть доступный заказ: бот движется к нему (inputs не пустой)', () => {

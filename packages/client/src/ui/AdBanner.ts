@@ -1,5 +1,5 @@
-const STORAGE_KEY = 'ad_banner_closed';
-const BANNER_ID = 'ad-banner';
+const STORAGE_KEY = 'ad_banner_closed'
+const BANNER_ID = 'ad-banner'
 
 export function showAdBanner(): void {
   // Don't show if dismissed in this session

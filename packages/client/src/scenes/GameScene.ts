@@ -1,9 +1,22 @@
 import Phaser from 'phaser'
 import { getSocket } from '../network/SocketClient'
-import type { MapData, GameState, PlayerState, OrderState, Direction, TileType } from '@delivery-city/shared'
+import type {
+  MapData,
+  GameState,
+  PlayerState,
+  OrderState,
+  Direction,
+  TileType,
+} from '@delivery-city/shared'
 import { TILE_SIZE, MOVE_DURATION } from '@delivery-city/shared'
 import { t } from '../i18n'
-import { trackSceneEnter, trackSceneLeave, trackGameStart, trackGameEnd, trackDelivery } from '../telemetry'
+import {
+  trackSceneEnter,
+  trackSceneLeave,
+  trackGameStart,
+  trackGameEnd,
+  trackDelivery,
+} from '../telemetry'
 
 interface PlayerRender {
   graphics: Phaser.GameObjects.Graphics
@@ -21,7 +34,10 @@ interface OrderRender {
 export class GameScene extends Phaser.Scene {
   private mapData!: MapData
   private myId = ''
-  private beforeUnloadHandler = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = '' }
+  private beforeUnloadHandler = (e: BeforeUnloadEvent) => {
+    e.preventDefault()
+    e.returnValue = ''
+  }
   private playerRenders = new Map<string, PlayerRender>()
   private orderRenders = new Map<string, OrderRender>()
   private sessionTimeLeft = 0
@@ -84,10 +100,7 @@ export class GameScene extends Phaser.Scene {
   create(): void {
     trackSceneEnter('GameScene')
     const players = Object.values(this._initState.players)
-    trackGameStart(
-      players.filter(p => !p.isBot).length,
-      players.filter(p =>  p.isBot).length,
-    )
+    trackGameStart(players.filter((p) => !p.isBot).length, players.filter((p) => p.isBot).length)
 
     const mapPixels = this.mapData.width * TILE_SIZE
     this.cameras.main.setBounds(0, 0, mapPixels, mapPixels)
@@ -105,15 +118,23 @@ export class GameScene extends Phaser.Scene {
     this.input.mouse!.disableContextMenu()
 
     // Zoom with mouse wheel / trackpad (proportional to delta — gentle on trackpad)
-    this.input.on('wheel', (_ptr: Phaser.Input.Pointer, _objs: unknown[], _dx: number, deltaY: number) => {
-      this.applyZoom(Math.pow(0.999, deltaY))
-    })
+    this.input.on(
+      'wheel',
+      (_ptr: Phaser.Input.Pointer, _objs: unknown[], _dx: number, deltaY: number) => {
+        this.applyZoom(Math.pow(0.999, deltaY))
+      },
+    )
 
     // Pan with right mouse button drag
     this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
       if (pointer.rightButtonDown()) {
         this.cameraFollowing = false
-        this.panStart = { px: pointer.x, py: pointer.y, tx: this.followTarget.x, ty: this.followTarget.y }
+        this.panStart = {
+          px: pointer.x,
+          py: pointer.y,
+          tx: this.followTarget.x,
+          ty: this.followTarget.y,
+        }
       }
     })
     this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
@@ -152,13 +173,17 @@ export class GameScene extends Phaser.Scene {
 
     const roomCode = sessionStorage.getItem('roomCode') ?? ''
     if (roomCode) {
-      const roomCodeText = this.add.text(width / 2, 52, roomCode, {
-        fontFamily: 'monospace',
-        fontSize: '14px',
-        color: '#44ccff',
-        stroke: '#000000',
-        strokeThickness: 2,
-      }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(200)
+      const roomCodeText = this.add
+        .text(width / 2, 52, roomCode, {
+          fontFamily: 'monospace',
+          fontSize: '14px',
+          color: '#44ccff',
+          stroke: '#000000',
+          strokeThickness: 2,
+        })
+        .setOrigin(0.5, 0)
+        .setScrollFactor(0)
+        .setDepth(200)
       this.cameras.main.ignore(roomCodeText)
     }
 
@@ -233,7 +258,7 @@ export class GameScene extends Phaser.Scene {
     })
 
     socket.on('session:end', (data) => {
-      const myResult = data.results.find(r => r.id === getSocket().id)
+      const myResult = data.results.find((r) => r.id === getSocket().id)
       const place = myResult ? data.results.indexOf(myResult) + 1 : 0
       trackGameEnd(myResult?.score ?? 0, place, data.results.length)
       trackSceneLeave('GameScene')
@@ -265,8 +290,8 @@ export class GameScene extends Phaser.Scene {
 
   private drawTile(g: Phaser.GameObjects.Graphics, tile: TileType, px: number, py: number): void {
     const S = TILE_SIZE
-    const ASPHALT = 0x585850   // warm dark gray asphalt
-    const SIDEWALK = 0x9a9080  // warm beige-gray concrete
+    const ASPHALT = 0x585850 // warm dark gray asphalt
+    const SIDEWALK = 0x9a9080 // warm beige-gray concrete
     const SW = 2 // sidewalk width
 
     switch (tile) {
@@ -293,14 +318,17 @@ export class GameScene extends Phaser.Scene {
         g.fillRect(px + S - M - 3, py + M, 3, S - M * 2)
 
         // Windows — grid of 3×3
-        const winW = 9, winH = 7, cols = 3, rows = 3
-        const gapX = ((S - M * 2) - cols * winW) / (cols + 1)
-        const gapY = ((S - M * 2) - rows * winH) / (rows + 1)
+        const winW = 9,
+          winH = 7,
+          cols = 3,
+          rows = 3
+        const gapX = (S - M * 2 - cols * winW) / (cols + 1)
+        const gapY = (S - M * 2 - rows * winH) / (rows + 1)
         // Soft warm window colors
         const winColors = [0xe0c870, 0xd4a848, 0xf0e8c0]
         for (let row = 0; row < rows; row++) {
           for (let col = 0; col < cols; col++) {
-            const lit = ((Math.abs(hash) + col * 3 + row * 5) % 5) !== 0
+            const lit = (Math.abs(hash) + col * 3 + row * 5) % 5 !== 0
             const wx = px + M + gapX + col * (winW + gapX)
             const wy = py + M + gapY + row * (winH + gapY)
             if (lit) {
@@ -329,13 +357,14 @@ export class GameScene extends Phaser.Scene {
           g.fillRect(px + 4 + i * 13, py + S / 2, 8, 1)
         }
         // Direction arrow — warm yellow, stem + head
-        const mx = px + S / 2, my = py + S / 2
+        const mx = px + S / 2,
+          my = py + S / 2
         g.fillStyle(0xffee88, 0.45)
         if (tile === 'ROAD_EAST') {
-          g.fillRect(mx - 14, my - 2, 16, 4)                        // stem →
+          g.fillRect(mx - 14, my - 2, 16, 4) // stem →
           g.fillTriangle(mx + 14, my, mx + 1, my - 9, mx + 1, my + 9) // head
         } else {
-          g.fillRect(mx - 2, my - 2, 16, 4)                         // stem ←
+          g.fillRect(mx - 2, my - 2, 16, 4) // stem ←
           g.fillTriangle(mx - 14, my, mx - 1, my - 9, mx - 1, my + 9)
         }
         break
@@ -355,13 +384,14 @@ export class GameScene extends Phaser.Scene {
           g.fillRect(px + S / 2, py + 4 + i * 13, 1, 8)
         }
         // Direction arrow — warm yellow, stem + head
-        const mx = px + S / 2, my = py + S / 2
+        const mx = px + S / 2,
+          my = py + S / 2
         g.fillStyle(0xffee88, 0.45)
         if (tile === 'ROAD_SOUTH') {
-          g.fillRect(mx - 2, my - 14, 4, 16)                        // stem ↓
+          g.fillRect(mx - 2, my - 14, 4, 16) // stem ↓
           g.fillTriangle(mx, my + 14, mx - 9, my + 1, mx + 9, my + 1) // head
         } else {
-          g.fillRect(mx - 2, my - 2, 4, 16)                         // stem ↑
+          g.fillRect(mx - 2, my - 2, 4, 16) // stem ↑
           g.fillTriangle(mx, my - 14, mx - 9, my - 1, mx + 9, my - 1)
         }
         break
@@ -391,21 +421,28 @@ export class GameScene extends Phaser.Scene {
   private addPlayer(state: PlayerState): void {
     const graphics = this.add.graphics().setDepth(10)
 
-    const label = this.add.text(0, 0, state.nickname, {
-      fontFamily: 'monospace',
-      fontSize: '12px',
-      color: '#ffffff',
-      stroke: '#000000',
-      strokeThickness: 2,
-    }).setOrigin(0.5, 1).setDepth(11)
+    const label = this.add
+      .text(0, 0, state.nickname, {
+        fontFamily: 'monospace',
+        fontSize: '12px',
+        color: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 2,
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(11)
 
-    const packageIcon = this.add.text(0, 0, '[P]', {
-      fontFamily: 'monospace',
-      fontSize: '11px',
-      color: '#ffdd00',
-      stroke: '#000000',
-      strokeThickness: 2,
-    }).setOrigin(0.5, 1).setDepth(12).setVisible(false)
+    const packageIcon = this.add
+      .text(0, 0, '[P]', {
+        fontFamily: 'monospace',
+        fontSize: '11px',
+        color: '#ffdd00',
+        stroke: '#000000',
+        strokeThickness: 2,
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(12)
+      .setVisible(false)
 
     this.worldObjects.push(graphics, label, packageIcon)
     this.hudCamera?.ignore([graphics, label, packageIcon])
@@ -469,20 +506,20 @@ export class GameScene extends Phaser.Scene {
     g.fillStyle(0x223344, 0.85)
     switch (direction) {
       case 'right':
-        g.fillRoundedRect(cx + 4,      cy - hh + 5, 12, H - 10, 2) // front
-        g.fillRoundedRect(cx - hw + 4, cy - hh + 5, 7,  H - 10, 2) // rear
+        g.fillRoundedRect(cx + 4, cy - hh + 5, 12, H - 10, 2) // front
+        g.fillRoundedRect(cx - hw + 4, cy - hh + 5, 7, H - 10, 2) // rear
         break
       case 'left':
         g.fillRoundedRect(cx - hw + 4 + 8, cy - hh + 5, 12, H - 10, 2)
-        g.fillRoundedRect(cx + hw - 11,    cy - hh + 5, 7,  H - 10, 2)
+        g.fillRoundedRect(cx + hw - 11, cy - hh + 5, 7, H - 10, 2)
         break
       case 'up':
         g.fillRoundedRect(cx - hw + 5, cy - hh + 4, W - 10, 12, 2)
-        g.fillRoundedRect(cx - hw + 5, cy + 4,      W - 10, 7,  2)
+        g.fillRoundedRect(cx - hw + 5, cy + 4, W - 10, 7, 2)
         break
       case 'down':
         g.fillRoundedRect(cx - hw + 5, cy + hh - 16, W - 10, 12, 2)
-        g.fillRoundedRect(cx - hw + 5, cy - hh + 4,  W - 10, 7,  2)
+        g.fillRoundedRect(cx - hw + 5, cy - hh + 4, W - 10, 7, 2)
         break
     }
 
@@ -554,13 +591,16 @@ export class GameScene extends Phaser.Scene {
     let label: Phaser.GameObjects.Text | null = null
 
     if (order.status === 'available' || order.status === 'assigned') {
-      label = this.add.text(0, 0, '', {
-        fontFamily: 'monospace',
-        fontSize: '11px',
-        color: '#ffffff',
-        stroke: '#000000',
-        strokeThickness: 2,
-      }).setOrigin(0.5, 1).setDepth(6)
+      label = this.add
+        .text(0, 0, '', {
+          fontFamily: 'monospace',
+          fontSize: '11px',
+          color: '#ffffff',
+          stroke: '#000000',
+          strokeThickness: 2,
+        })
+        .setOrigin(0.5, 1)
+        .setDepth(6)
     }
 
     this.worldObjects.push(graphics)
@@ -584,7 +624,8 @@ export class GameScene extends Phaser.Scene {
     const drawPickup = (): void => {
       const cx = state.pickupTile.x * TILE_SIZE + TILE_SIZE / 2
       const cy = state.pickupTile.y * TILE_SIZE + TILE_SIZE / 2
-      const W = 22, H = 28
+      const W = 22,
+        H = 28
       const bx = cx - W / 2
       const by = cy - H / 2 + 2
 
@@ -671,15 +712,21 @@ export class GameScene extends Phaser.Scene {
     const myRender = this.playerRenders.get(this.myId)
     const pos = myRender
       ? this.getPlayerPixelPos(myRender.state)
-      : { x: this.cameras.main.scrollX + this.scale.width / 2, y: this.cameras.main.scrollY + this.scale.height / 2 }
+      : {
+          x: this.cameras.main.scrollX + this.scale.width / 2,
+          y: this.cameras.main.scrollY + this.scale.height / 2,
+        }
 
-    const txt = this.add.text(pos.x, pos.y - 20, `+${amount}`, {
-      fontFamily: 'monospace',
-      fontSize: '30px',
-      color: '#00ff88',
-      stroke: '#004422',
-      strokeThickness: 3,
-    }).setOrigin(0.5).setDepth(100)
+    const txt = this.add
+      .text(pos.x, pos.y - 20, `+${amount}`, {
+        fontFamily: 'monospace',
+        fontSize: '30px',
+        color: '#00ff88',
+        stroke: '#004422',
+        strokeThickness: 3,
+      })
+      .setOrigin(0.5)
+      .setDepth(100)
     this.hudCamera?.ignore([txt])
 
     this.tweens.add({
@@ -697,50 +744,69 @@ export class GameScene extends Phaser.Scene {
   private createHUD(): void {
     const { width, height } = this.scale
 
-    this.hudTimer = this.add.text(width / 2, 14, '05:00', {
-      fontFamily: 'monospace',
-      fontSize: '34px',
-      color: '#ffffff',
-      stroke: '#000000',
-      strokeThickness: 3,
-    }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(200)
+    this.hudTimer = this.add
+      .text(width / 2, 14, '05:00', {
+        fontFamily: 'monospace',
+        fontSize: '34px',
+        color: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 3,
+      })
+      .setOrigin(0.5, 0)
+      .setScrollFactor(0)
+      .setDepth(200)
 
+    this.hudScores = this.add
+      .text(width - 14, 14, '', {
+        fontFamily: 'monospace',
+        fontSize: '15px',
+        color: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 2,
+        align: 'right',
+      })
+      .setOrigin(1, 0)
+      .setScrollFactor(0)
+      .setDepth(200)
 
-    this.hudScores = this.add.text(width - 14, 14, '', {
-      fontFamily: 'monospace',
-      fontSize: '15px',
-      color: '#ffffff',
-      stroke: '#000000',
-      strokeThickness: 2,
-      align: 'right',
-    }).setOrigin(1, 0).setScrollFactor(0).setDepth(200)
+    this.hudMyScore = this.add
+      .text(width / 2, height - 14, `${t('score')}: 0`, {
+        fontFamily: 'monospace',
+        fontSize: '28px',
+        color: '#ffdd00',
+        stroke: '#000000',
+        strokeThickness: 3,
+      })
+      .setOrigin(0.5, 1)
+      .setScrollFactor(0)
+      .setDepth(200)
 
-    this.hudMyScore = this.add.text(width / 2, height - 14, `${t('score')}: 0`, {
-      fontFamily: 'monospace',
-      fontSize: '28px',
-      color: '#ffdd00',
-      stroke: '#000000',
-      strokeThickness: 3,
-    }).setOrigin(0.5, 1).setScrollFactor(0).setDepth(200)
-
-    this.hudOrderTimer = this.add.text(width / 2, height - 54, '', {
-      fontFamily: 'monospace',
-      fontSize: '20px',
-      color: '#ff8844',
-      stroke: '#000000',
-      strokeThickness: 2,
-    }).setOrigin(0.5, 1).setScrollFactor(0).setDepth(200)
+    this.hudOrderTimer = this.add
+      .text(width / 2, height - 54, '', {
+        fontFamily: 'monospace',
+        fontSize: '20px',
+        color: '#ff8844',
+        stroke: '#000000',
+        strokeThickness: 2,
+      })
+      .setOrigin(0.5, 1)
+      .setScrollFactor(0)
+      .setDepth(200)
 
     this.hudNavArrow = this.add.graphics().setScrollFactor(0).setDepth(200)
 
-    this.hudNavDist = this.add.text(50, height - 50, '', {
-      fontFamily: 'monospace',
-      fontSize: '13px',
-      color: '#ffffff',
-      stroke: '#000000',
-      strokeThickness: 2,
-      align: 'center',
-    }).setOrigin(0.5, 0).setScrollFactor(0).setDepth(200)
+    this.hudNavDist = this.add
+      .text(50, height - 50, '', {
+        fontFamily: 'monospace',
+        fontSize: '13px',
+        color: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 2,
+        align: 'center',
+      })
+      .setOrigin(0.5, 0)
+      .setScrollFactor(0)
+      .setDepth(200)
 
     // Zoom buttons — circles on the right side
     const R = 22
@@ -749,59 +815,79 @@ export class GameScene extends Phaser.Scene {
       const bg = this.add.graphics().setScrollFactor(0).setDepth(201)
       const drawBg = (hover: boolean, pressed: boolean) => {
         bg.clear()
-        bg.fillStyle(pressed ? 0xffffff : (hover ? 0x555555 : 0x222222), pressed ? 0.35 : 0.65)
+        bg.fillStyle(pressed ? 0xffffff : hover ? 0x555555 : 0x222222, pressed ? 0.35 : 0.65)
         bg.fillCircle(cx, cy, R)
         bg.lineStyle(1.5, 0xffffff, hover ? 0.9 : 0.45)
         bg.strokeCircle(cx, cy, R)
       }
       drawBg(false, false)
 
-      const lbl = this.add.text(cx, cy, label, {
-        fontFamily: 'monospace', 
-        fontSize: '26px',
-        color: '#ffffff', 
-        stroke: '#000000', 
-        strokeThickness: 2,
-      }).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(202)
+      const lbl = this.add
+        .text(cx, cy, label, {
+          fontFamily: 'monospace',
+          fontSize: '26px',
+          color: '#ffffff',
+          stroke: '#000000',
+          strokeThickness: 2,
+        })
+        .setOrigin(0.5, 0.5)
+        .setScrollFactor(0)
+        .setDepth(202)
 
-      const zone = this.add.zone(cx, cy, R * 2, R * 2)
-        .setScrollFactor(0).setDepth(203).setInteractive({ useHandCursor: true })
+      const zone = this.add
+        .zone(cx, cy, R * 2, R * 2)
+        .setScrollFactor(0)
+        .setDepth(203)
+        .setInteractive({ useHandCursor: true })
       zone.on('pointerover', () => drawBg(true, false))
-      zone.on('pointerout',  () => drawBg(false, false))
-      zone.on('pointerdown', () => { drawBg(true, true); this.applyZoom(factor) })
-      zone.on('pointerup',   () => drawBg(true, false))
+      zone.on('pointerout', () => drawBg(false, false))
+      zone.on('pointerdown', () => {
+        drawBg(true, true)
+        this.applyZoom(factor)
+      })
+      zone.on('pointerup', () => drawBg(true, false))
 
       return [bg, lbl, zone] as Phaser.GameObjects.GameObject[]
     }
 
-    const plusObjs  = makeZoomBtn(height / 2 - R - 6, '+', 1.2)
+    const plusObjs = makeZoomBtn(height / 2 - R - 6, '+', 1.2)
     const minusObjs = makeZoomBtn(height / 2 + R + 6, '−', 1 / 1.2)
 
     this.joystickGfx = this.add.graphics().setScrollFactor(0).setDepth(300)
 
     // Leave button — top-left HUD
-    const backBtn = this.add.text(16, 16, t('leave'), {
-      fontFamily: 'monospace',
-      fontSize: '16px',
-      color: '#6666aa',
-      stroke: '#000000',
-      strokeThickness: 2,
-    }).setScrollFactor(0).setDepth(200).setOrigin(0, 0).setInteractive({ useHandCursor: true })
+    const backBtn = this.add
+      .text(16, 16, t('leave'), {
+        fontFamily: 'monospace',
+        fontSize: '16px',
+        color: '#6666aa',
+        stroke: '#000000',
+        strokeThickness: 2,
+      })
+      .setScrollFactor(0)
+      .setDepth(200)
+      .setOrigin(0, 0)
+      .setInteractive({ useHandCursor: true })
     backBtn.on('pointerover', () => backBtn.setColor('#aaaaff'))
-    backBtn.on('pointerout',  () => backBtn.setColor('#6666aa'))
+    backBtn.on('pointerout', () => backBtn.setColor('#6666aa'))
     backBtn.on('pointerdown', () => this.showLeaveConfirm())
     this.cameras.main.ignore(backBtn)
 
     // Help button — above navigator
-    const helpBtn = this.add.text(29, height - 150, t('howToPlay'), {
-      fontFamily: 'monospace',
-      fontSize: '14px',
-      color: '#00ccaa',
-      stroke: '#000000',
-      strokeThickness: 2,
-    }).setScrollFactor(0).setDepth(200).setOrigin(0, 0).setInteractive({ useHandCursor: true })
+    const helpBtn = this.add
+      .text(29, height - 150, t('howToPlay'), {
+        fontFamily: 'monospace',
+        fontSize: '14px',
+        color: '#00ccaa',
+        stroke: '#000000',
+        strokeThickness: 2,
+      })
+      .setScrollFactor(0)
+      .setDepth(200)
+      .setOrigin(0, 0)
+      .setInteractive({ useHandCursor: true })
     helpBtn.on('pointerover', () => helpBtn.setColor('#ffffff'))
-    helpBtn.on('pointerout',  () => helpBtn.setColor('#00ccaa'))
+    helpBtn.on('pointerout', () => helpBtn.setColor('#00ccaa'))
     helpBtn.on('pointerdown', () => {
       this.scene.launch('RulesScene', { caller: 'GameScene' })
     })
@@ -812,9 +898,14 @@ export class GameScene extends Phaser.Scene {
     })
 
     this.hudObjects.push(
-      this.hudTimer, this.hudScores, this.hudMyScore,
-      this.hudOrderTimer, this.hudNavArrow, this.hudNavDist,
-      ...plusObjs, ...minusObjs,
+      this.hudTimer,
+      this.hudScores,
+      this.hudMyScore,
+      this.hudOrderTimer,
+      this.hudNavArrow,
+      this.hudNavDist,
+      ...plusObjs,
+      ...minusObjs,
       this.joystickGfx,
       helpBtn,
       backBtn,
@@ -824,23 +915,29 @@ export class GameScene extends Phaser.Scene {
   // ── Touch joystick ───────────────────────────────────────────────────
 
   private setupJoystick(): void {
-    const BASE_R  = 72
-    const KNOB_R  = 28
-    const DEAD_R  = 14
+    const BASE_R = 72
+    const KNOB_R = 28
+    const DEAD_R = 14
 
     const draw = (cx: number, cy: number, kx: number, ky: number, dir: Direction) => {
       const g = this.joystickGfx
       g.clear()
 
       // Base
-      g.fillStyle(0x000000, 0.30)
+      g.fillStyle(0x000000, 0.3)
       g.fillCircle(cx, cy, BASE_R)
       g.lineStyle(1.5, 0xffffff, 0.18)
       g.strokeCircle(cx, cy, BASE_R)
 
       // Direction highlight arc
       if (dir !== 'idle') {
-        const angles: Record<Direction, number> = { right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2, idle: 0 }
+        const angles: Record<Direction, number> = {
+          right: 0,
+          down: Math.PI / 2,
+          left: Math.PI,
+          up: -Math.PI / 2,
+          idle: 0,
+        }
         const a = angles[dir]
         g.lineStyle(3, 0x44ccff, 0.6)
         g.beginPath()
@@ -858,7 +955,7 @@ export class GameScene extends Phaser.Scene {
     this.input.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
       if (ptr.rightButtonDown() || this.joystickPointer) return
       this.joystickPointer = ptr
-      this.joystickCenter  = { x: ptr.x, y: ptr.y }
+      this.joystickCenter = { x: ptr.x, y: ptr.y }
       this.cameraFollowing = true
       draw(ptr.x, ptr.y, ptr.x, ptr.y, 'idle')
     })
@@ -875,12 +972,12 @@ export class GameScene extends Phaser.Scene {
       const ky = cy + dy * norm * clamp
 
       if (dist > DEAD_R) {
-        const a = Math.atan2(dy, dx)          // -π … π
+        const a = Math.atan2(dy, dx) // -π … π
         const Q = Math.PI / 4
-        if (a > -Q && a <= Q)           this.touchDirection = 'right'
-        else if (a > Q && a <= 3 * Q)   this.touchDirection = 'down'
+        if (a > -Q && a <= Q) this.touchDirection = 'right'
+        else if (a > Q && a <= 3 * Q) this.touchDirection = 'down'
         else if (a > -3 * Q && a <= -Q) this.touchDirection = 'up'
-        else                             this.touchDirection = 'left'
+        else this.touchDirection = 'left'
       } else {
         this.touchDirection = 'idle'
       }
@@ -891,8 +988,8 @@ export class GameScene extends Phaser.Scene {
     this.input.on('pointerup', (ptr: Phaser.Input.Pointer) => {
       if (ptr !== this.joystickPointer) return
       this.joystickPointer = null
-      this.joystickCenter  = null
-      this.touchDirection  = 'idle'
+      this.joystickCenter = null
+      this.touchDirection = 'idle'
       this.joystickGfx.clear()
     })
 
@@ -900,8 +997,8 @@ export class GameScene extends Phaser.Scene {
     this.input.on('pointercancel', (ptr: Phaser.Input.Pointer) => {
       if (ptr !== this.joystickPointer) return
       this.joystickPointer = null
-      this.joystickCenter  = null
-      this.touchDirection  = 'idle'
+      this.joystickCenter = null
+      this.touchDirection = 'idle'
       this.joystickGfx.clear()
     })
   }
@@ -967,8 +1064,8 @@ export class GameScene extends Phaser.Scene {
     } else {
       // No order — draw 3 arrows to nearest available pickups
       const available = Array.from(this.orderRenders.values())
-        .filter(r => r.state.status === 'available')
-        .map(r => {
+        .filter((r) => r.state.status === 'available')
+        .map((r) => {
           const px = r.state.pickupTile.x * TILE_SIZE + TILE_SIZE / 2
           const py = r.state.pickupTile.y * TILE_SIZE + TILE_SIZE / 2
           return { px, py, dist: Math.hypot(px - playerPos.x, py - playerPos.y) }
@@ -979,7 +1076,9 @@ export class GameScene extends Phaser.Scene {
       if (!available.length) return
 
       const { height } = this.scale
-      const cx = 50, cy = height - 90, R = 30
+      const cx = 50,
+        cy = height - 90,
+        R = 30
 
       this.hudNavArrow.fillStyle(0x000000, 0.55)
       this.hudNavArrow.fillCircle(cx, cy, R + 4)
@@ -1003,14 +1102,19 @@ export class GameScene extends Phaser.Scene {
         this.hudNavArrow.lineBetween(cx, cy, tipX, tipY)
         this.hudNavArrow.fillStyle(0xf0c030, alphas[i])
         this.hudNavArrow.fillTriangle(
-          tipX, tipY,
-          tipX + Math.cos(angle + Math.PI * 0.75) * headSize, tipY + Math.sin(angle + Math.PI * 0.75) * headSize,
-          tipX + Math.cos(angle - Math.PI * 0.75) * headSize, tipY + Math.sin(angle - Math.PI * 0.75) * headSize,
+          tipX,
+          tipY,
+          tipX + Math.cos(angle + Math.PI * 0.75) * headSize,
+          tipY + Math.sin(angle + Math.PI * 0.75) * headSize,
+          tipX + Math.cos(angle - Math.PI * 0.75) * headSize,
+          tipY + Math.sin(angle - Math.PI * 0.75) * headSize,
         )
       })
 
       const distTiles = Math.round(available[0].dist / TILE_SIZE)
-      this.hudNavDist.setPosition(cx, cy + R + 10).setText(`${distTiles}${t('tileUnit')} · ${t('order')}`)
+      this.hudNavDist
+        .setPosition(cx, cy + R + 10)
+        .setText(`${distTiles}${t('tileUnit')} · ${t('order')}`)
       return
     }
 
@@ -1046,9 +1150,12 @@ export class GameScene extends Phaser.Scene {
     const headSize = 7
     this.hudNavArrow.fillStyle(arrowColor, 1)
     this.hudNavArrow.fillTriangle(
-      tipX, tipY,
-      tipX + Math.cos(angle + Math.PI * 0.75) * headSize, tipY + Math.sin(angle + Math.PI * 0.75) * headSize,
-      tipX + Math.cos(angle - Math.PI * 0.75) * headSize, tipY + Math.sin(angle - Math.PI * 0.75) * headSize,
+      tipX,
+      tipY,
+      tipX + Math.cos(angle + Math.PI * 0.75) * headSize,
+      tipY + Math.sin(angle + Math.PI * 0.75) * headSize,
+      tipX + Math.cos(angle - Math.PI * 0.75) * headSize,
+      tipY + Math.sin(angle - Math.PI * 0.75) * headSize,
     )
 
     this.hudNavDist.setPosition(cx, cy + R + 10).setText(`${distTiles}${t('tileUnit')} · ${label}`)
@@ -1119,7 +1226,8 @@ export class GameScene extends Phaser.Scene {
     overlay.fillStyle(0x000000, 0.65)
     overlay.fillRect(0, 0, width, height)
 
-    const PW = 340, PH = 160
+    const PW = 340,
+      PH = 160
     const px = width / 2 - PW / 2
     const py = height / 2 - PH / 2
 
@@ -1129,13 +1237,17 @@ export class GameScene extends Phaser.Scene {
     panel.lineStyle(2, 0x00ccaa, 1)
     panel.strokeRoundedRect(px, py, PW, PH, 8)
 
-    const msg = this.add.text(width / 2, py + 44, t('leaveConfirm'), {
-      fontFamily: 'monospace',
-      fontSize: '16px',
-      color: '#ccddcc',
-      align: 'center',
-      wordWrap: { width: PW - 32 },
-    }).setOrigin(0.5, 0.5).setScrollFactor(0).setDepth(502)
+    const msg = this.add
+      .text(width / 2, py + 44, t('leaveConfirm'), {
+        fontFamily: 'monospace',
+        fontSize: '16px',
+        color: '#ccddcc',
+        align: 'center',
+        wordWrap: { width: PW - 32 },
+      })
+      .setOrigin(0.5, 0.5)
+      .setScrollFactor(0)
+      .setDepth(502)
 
     const makeBtn = (
       bx: number,
@@ -1144,34 +1256,45 @@ export class GameScene extends Phaser.Scene {
       danger: boolean,
       onClick: () => void,
     ) => {
-      const btnW = 140, btnH = 40
+      const btnW = 140,
+        btnH = 40
       const borderColor = danger ? 0xcc2244 : 0x00ccaa
-      const textColor   = danger ? '#ff4466' : '#00ff88'
-      const fillColor   = danger ? 0x220011 : 0x003333
-      const hoverColor  = danger ? 0x440022 : 0x005544
+      const textColor = danger ? '#ff4466' : '#00ff88'
+      const fillColor = danger ? 0x220011 : 0x003333
+      const hoverColor = danger ? 0x440022 : 0x005544
 
       const bg = this.add.graphics().setScrollFactor(0).setDepth(502)
       const drawBg = (hover: boolean) => {
         bg.clear()
         bg.lineStyle(2, borderColor, 1)
-        bg.fillStyle(filled ? (hover ? hoverColor : fillColor) : (hover ? fillColor : 0x111a22), 1)
+        bg.fillStyle(filled ? (hover ? hoverColor : fillColor) : hover ? fillColor : 0x111a22, 1)
         bg.fillRect(bx - btnW / 2, py + PH - 60, btnW, btnH)
         bg.strokeRect(bx - btnW / 2, py + PH - 60, btnW, btnH)
       }
       drawBg(false)
 
-      const lbl = this.add.text(bx, py + PH - 60 + btnH / 2, label, {
-        fontFamily: 'monospace',
-        fontSize: '16px',
-        color: textColor,
-      }).setOrigin(0.5).setScrollFactor(0).setDepth(503)
+      const lbl = this.add
+        .text(bx, py + PH - 60 + btnH / 2, label, {
+          fontFamily: 'monospace',
+          fontSize: '16px',
+          color: textColor,
+        })
+        .setOrigin(0.5)
+        .setScrollFactor(0)
+        .setDepth(503)
 
       bg.setInteractive(
         new Phaser.Geom.Rectangle(bx - btnW / 2, py + PH - 60, btnW, btnH),
         Phaser.Geom.Rectangle.Contains,
       )
-      bg.on('pointerover', () => { drawBg(true);  lbl.setColor('#ffffff') })
-      bg.on('pointerout',  () => { drawBg(false); lbl.setColor(textColor) })
+      bg.on('pointerover', () => {
+        drawBg(true)
+        lbl.setColor('#ffffff')
+      })
+      bg.on('pointerout', () => {
+        drawBg(false)
+        lbl.setColor(textColor)
+      })
       bg.on('pointerdown', onClick)
 
       this.cameras.main.ignore([bg, lbl])
@@ -1179,15 +1302,23 @@ export class GameScene extends Phaser.Scene {
     }
 
     const destroy = () => {
-      overlay.destroy(); panel.destroy(); msg.destroy()
-      yBg.destroy(); yLbl.destroy(); nBg.destroy(); nLbl.destroy()
+      overlay.destroy()
+      panel.destroy()
+      msg.destroy()
+      yBg.destroy()
+      yLbl.destroy()
+      nBg.destroy()
+      nLbl.destroy()
     }
 
     const [yBg, yLbl] = makeBtn(width / 2 - 80, t('leaveYes'), true, true, () => {
       destroy()
       getSocket().emit('player:leave')
       this.cleanupSocket()
-      this.scene.start('LobbyScene', { code: sessionStorage.getItem('roomCode') ?? '', phase: 'playing' })
+      this.scene.start('LobbyScene', {
+        code: sessionStorage.getItem('roomCode') ?? '',
+        phase: 'playing',
+      })
     })
 
     const [nBg, nLbl] = makeBtn(width / 2 + 80, t('leaveNo'), false, false, () => {

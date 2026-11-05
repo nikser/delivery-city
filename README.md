@@ -15,12 +15,12 @@ Multiplayer top-down delivery game. Race against other players to pick up and de
 
 ## Stack
 
-| Layer | Tech |
-|-------|------|
-| Client | Phaser 3, TypeScript, Vite |
-| Server | Node.js, Express, Socket.io |
-| Shared | TypeScript types + constants |
-| Monorepo | npm workspaces |
+| Layer    | Tech                         |
+| -------- | ---------------------------- |
+| Client   | Phaser 3, TypeScript, Vite   |
+| Server   | Node.js, Express, Socket.io  |
+| Shared   | TypeScript types + constants |
+| Monorepo | npm workspaces               |
 
 ## Project structure
 
@@ -53,11 +53,11 @@ Opens on port `3001` — server serves the built client as static files.
 
 ## How to play
 
-| Key | Action |
-|-----|--------|
-| `↑ W` | Move up |
-| `↓ S` | Move down |
-| `← A` | Move left |
+| Key   | Action     |
+| ----- | ---------- |
+| `↑ W` | Move up    |
+| `↓ S` | Move down  |
+| `← A` | Move left  |
 | `→ D` | Move right |
 
 Roads are one-way — plan your route. Pick up a bag, follow the nav arrow to the delivery point.

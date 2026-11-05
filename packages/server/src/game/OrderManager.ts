@@ -1,4 +1,10 @@
-import { MapData, OrderState, ORDER_TTL_MAP, ORDER_TTL_HELD, ORDER_MAX_DISTANCE } from '@delivery-city/shared'
+import {
+  MapData,
+  OrderState,
+  ORDER_TTL_MAP,
+  ORDER_TTL_HELD,
+  ORDER_MAX_DISTANCE,
+} from '@delivery-city/shared'
 import { isWalkable } from '../map/MapGenerator'
 import { generateId } from './IdGenerator'
 
