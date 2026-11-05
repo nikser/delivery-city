@@ -18,6 +18,7 @@ function makePlayer(
     direction: 'idle',
     isMoving: false,
     moveProgress: 1,
+    moveDuration: 0,
     fromTileX: x,
     fromTileY: y,
     carryingOrderId,
@@ -93,12 +94,13 @@ describe('BotController.bfs', () => {
 })
 
 describe('BotController.tick', () => {
-  test('без заказов: inputs пустой', () => {
+  // Idle bots wander by design (wanderToRandom) — not an empty-inputs case.
+  test('без заказов: бот блуждает (inputs не пустой)', () => {
     const bot = new BotController(map)
     const player = makePlayer('bot1', 0, 0)
     bot.addBot('bot1')
     const inputs = bot.tick({ bot1: player }, {})
-    expect(inputs.has('bot1')).toBe(false)
+    expect(inputs.has('bot1')).toBe(true)
   })
 
   test('есть доступный заказ: бот движется к нему (inputs не пустой)', () => {
