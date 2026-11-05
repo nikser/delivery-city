@@ -1,5 +1,4 @@
-import { generateMap, isWalkable, isRoadIndex } from '../../server/src/map/MapGenerator'
-import { TileType } from '../../shared/src/index'
+import { generateMap, isWalkable } from '../../server/src/map/MapGenerator'
 
 describe('MapGenerator', () => {
   const map = generateMap()
