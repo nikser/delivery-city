@@ -42,7 +42,8 @@ if (gaId) {
   )
 }
 
-app.get('*', (_req, res) => res.send(indexHtml))
+// Express 5 syntax: a bare '*' throws at startup.
+app.get('/{*splat}', (_req, res) => res.send(indexHtml))
 
 const rooms = new Map<string, GameRoom>()
 // Maps socketId → roomCode

@@ -39,3 +39,9 @@ jobs:
       # source, matching the other repos' docker-validate job.
       - name: Build production image
         run: docker build -t delivery-city:ci-check .
+      # Catches crashes at startup (e.g. the Express 5 '*' route) that build and unit tests miss.
+      - name: Smoke-test the image
+        run: |
+          docker run -d --name smoke -p 3001:3001 delivery-city:ci-check
+          for i in $(seq 1 15); do curl -fs http://localhost:3001/ | grep -q '<title>Delivery City' && curl -fs 'http://localhost:3001/socket.io/?EIO=4&transport=polling' | grep -q sid && exit 0; sleep 2; done
+          docker logs smoke; exit 1
