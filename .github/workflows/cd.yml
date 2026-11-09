@@ -105,6 +105,7 @@ jobs:
             cd ${{ env.BASE_DIR }}/delivery-city
             echo "IMAGE_TAG=${{ needs.build-push.outputs.sha-tag }}" > .env
             echo "GITHUB_REPOSITORY=${{ env.IMAGE_NAME }}" >> .env
-            docker compose pull
-            docker compose up -d
+            # -f: a leftover manual compose.yml on the VPS would otherwise win over ours.
+            docker compose -f docker-compose.yml pull
+            docker compose -f docker-compose.yml up -d
             docker image prune -f
