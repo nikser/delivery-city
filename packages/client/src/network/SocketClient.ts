@@ -12,7 +12,9 @@ export function getSocket(): GameSocket {
     // In production both are served from the same origin, so io() auto-connects correctly.
     const url =
       import.meta.env.VITE_SERVER_URL ?? (import.meta.env.DEV ? 'http://localhost:3001' : undefined)
-    socket = io(url as string)
+    // Socket.io lives next to the page (e.g. /delivery-city/socket.io), not at the origin root.
+    const path = new URL('socket.io', url ?? document.baseURI).pathname
+    socket = io(url as string, { path })
   }
   return socket
 }
