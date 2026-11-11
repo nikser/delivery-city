@@ -1,3 +1,4 @@
+import { describe, expect, test } from 'vitest'
 import { applyDirection, canMove } from '../../server/src/game/MovementSystem'
 import { generateMap } from '../../server/src/map/MapGenerator'
 import { MapData } from '../../shared/src/index'

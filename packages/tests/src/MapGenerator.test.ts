@@ -1,3 +1,4 @@
+import { describe, expect, test } from 'vitest'
 import { generateMap, isWalkable } from '../../server/src/map/MapGenerator'
 
 describe('MapGenerator', () => {

@@ -50,7 +50,7 @@ npm run dev
 ```bash
 npm run lint         # eslint
 npm run format:check # prettier --check
-npm run test         # jest, packages/tests
+npm run test         # vitest, packages/tests
 ```
 
 CI (`.github/workflows/ci.yml`) runs lint, format check, build, test and a
