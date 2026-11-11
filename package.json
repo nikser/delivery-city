@@ -16,9 +16,9 @@
     "image:build:push": "npm run build:image && npm run push:image"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.5",
-    "concurrently": "^9.2.1",
-    "eslint": "^9.39.5",
+    "@eslint/js": "^10.0.1",
+    "concurrently": "^10.0.6",
+    "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.9.10",
     "typescript-eslint": "^8.72.1"
