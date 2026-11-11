@@ -10,7 +10,7 @@
     "@delivery-city/server": "*"
   },
   "devDependencies": {
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "@types/node": "^26.6.6",
     "vitest": "^5.1.0"
   }

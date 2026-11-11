@@ -8,7 +8,7 @@
     "dev": "concurrently \"npm run dev -w packages/server\" \"npm run dev -w packages/client\"",
     "build": "npm run build -w packages/shared && npm run build -w packages/server && npm run build -w packages/client",
     "test": "npm run test -w packages/tests",
-    "lint": "eslint .",
+    "lint": "oxlint",
     "format:check": "prettier --check \"packages/**/src/**/*.ts\" \"*.md\"",
     "format:write": "prettier --write \"packages/**/src/**/*.ts\" \"*.md\"",
     "build:image": "docker build --platform=linux/amd64 -t nixerr/delivery-city:latest .",
@@ -16,11 +16,8 @@
     "image:build:push": "npm run build:image && npm run push:image"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
     "concurrently": "^10.0.7",
-    "eslint": "^10.14.0",
-    "eslint-config-prettier": "^10.1.8",
-    "prettier": "^3.9.10",
-    "typescript-eslint": "^8.72.1"
+    "oxlint": "^1.93.0",
+    "prettier": "^3.9.10"
   }
 }

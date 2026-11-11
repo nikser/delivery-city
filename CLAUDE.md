@@ -94,7 +94,7 @@ update
 npm run dev          # start server + client (hot reload)
 npm run build        # full production build
 npm run test         # run Jest suite
-npm run lint         # eslint
+npm run lint         # oxlint (.oxlintrc.json)
 npm run format:check # prettier --check
 npm run format:write # prettier --write (fix formatting)
 npm run build:image  # build Docker image (linux/amd64)
