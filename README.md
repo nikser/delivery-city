@@ -2,7 +2,7 @@
 
 Multiplayer top-down delivery game. Race against other players to pick up and deliver orders across a city grid as fast as possible.
 
-![TypeScript](https://img.shields.io/badge/TypeScript-6.x-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-7.x-blue)
 ![Node.js](https://img.shields.io/badge/Node.js-26-green)
 ![Phaser](https://img.shields.io/badge/Phaser-3.x-orange)
 ![CI](https://github.com/nikser/delivery-city/actions/workflows/ci.yml/badge.svg)
@@ -48,7 +48,7 @@ npm run dev
 ## Testing & CI
 
 ```bash
-npm run lint         # eslint
+npm run lint         # oxlint (.oxlintrc.json)
 npm run format:check # prettier --check
 npm run test         # vitest, packages/tests
 ```

@@ -19,7 +19,7 @@ jobs:
       - name: Install (full workspace, needed for shared/server/client/tests)
         run: npm ci
 
-      - name: Lint (eslint)
+      - name: Lint (oxlint)
         run: npm run lint
 
       - name: Format check (prettier)
