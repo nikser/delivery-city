@@ -28,7 +28,7 @@ jobs:
       - name: Build (shared -> server -> client, same order as npm run build)
         run: npm run build
 
-      - name: Test (packages/tests, jest)
+      - name: Test (packages/tests, vitest)
         run: npm run test
 
   docker-validate:

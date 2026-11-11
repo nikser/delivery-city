@@ -10,7 +10,7 @@ updates:
       dev:
         dependency-type: "development"
     ignore:
-      # shortcut: ts-jest needs the TS JS API, which TS 7 dropped; lift once ts-jest supports TS 7.
+      # shortcut: typescript-eslint needs the TS JS API, which TS 7 dropped; lift once it supports TS 7.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
 
