@@ -6,8 +6,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@delivery-city/shared": "*",
-    "@delivery-city/server": "*"
+    "@delivery-city/shared": "workspace:*",
+    "@delivery-city/server": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
