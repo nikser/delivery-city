@@ -7,7 +7,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@delivery-city/shared": "*",
+    "@delivery-city/shared": "workspace:*",
     "@sentry/browser": "^11.11.0",
     "phaser": "^4.2.1",
     "socket.io-client": "^4.8.4"

@@ -1,0 +1,4 @@
+packages:
+  - packages/*
+allowBuilds:
+  esbuild: false # postinstall only checks the binary; the platform package already ships it

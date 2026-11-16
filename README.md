@@ -21,7 +21,7 @@ Multiplayer top-down delivery game. Race against other players to pick up and de
 | Client   | Phaser 3, TypeScript, Vite   |
 | Server   | Node.js, Express, Socket.io  |
 | Shared   | TypeScript types + constants |
-| Monorepo | npm workspaces               |
+| Monorepo | pnpm workspaces              |
 
 ## Project structure
 
@@ -33,13 +33,22 @@ packages/
   tests/    # Jest unit/integration tests
 ```
 
+## pnpm
+
+The repo uses pnpm (version pinned in `packageManager` in `package.json`). Install it:
+
+- macOS: `brew install pnpm`
+- any OS: `npm i -g pnpm` (Node 25+ has no built-in corepack)
+
+Check with `pnpm -v`, then run `pnpm install`. Main commands: `pnpm dev`, `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm format:check`, `pnpm format:write`.
+
 ## Getting started
 
 **Requirements:** Node.js 20+ (CI and Docker run on Node 26)
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 - Client: http://localhost:5173
@@ -48,9 +57,9 @@ npm run dev
 ## Testing & CI
 
 ```bash
-npm run lint         # oxlint (.oxlintrc.json)
-npm run format:check # prettier --check
-npm run test         # vitest, packages/tests
+pnpm lint         # oxlint (.oxlintrc.json)
+pnpm format:check # prettier --check
+pnpm test         # vitest, packages/tests
 ```
 
 CI (`.github/workflows/ci.yml`) runs lint, format check, build, test and a

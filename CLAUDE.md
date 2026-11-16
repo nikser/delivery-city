@@ -5,7 +5,7 @@
 Online multiplayer arcade game. Top-down delivery cars, no registration required.
 5-minute casual sessions, bot fill-in for missing players.
 
-**Stack:** Node.js + Socket.io (server) · Vite + Phaser.js (client) · Jest (tests) · npm workspaces monorepo
+**Stack:** Node.js + Socket.io (server) · Vite + Phaser.js (client) · Jest (tests) · pnpm workspaces monorepo
 
 ```
 packages/
@@ -34,8 +34,8 @@ packages/
 - Do not add features beyond what is asked. No speculative abstractions.
 - Keep server and client concerns strictly separated — no game logic in the client.
 - Write tests for new server-side logic in `packages/tests`.
-- CI (`.github/workflows/ci.yml`) runs on every PR: lint, format check, build, test, docker-validate. Run `npm run lint && npm run format:check && npm run build && npm run test` locally before pushing.
-- Format with Prettier (no semicolons, single quotes — see `.prettierrc.json`); fix with `npm run format:write`.
+- CI (`.github/workflows/ci.yml`) runs on every PR: lint, format check, build, test, docker-validate. Run `pnpm lint && pnpm format:check && pnpm build && pnpm test` locally before pushing.
+- Format with Prettier (no semicolons, single quotes — see `.prettierrc.json`); fix with `pnpm format:write`.
 
 ## Security
 
@@ -91,12 +91,12 @@ update
 ## Commands
 
 ```bash
-npm run dev          # start server + client (hot reload)
-npm run build        # full production build
-npm run test         # run Jest suite
-npm run lint         # oxlint (.oxlintrc.json)
-npm run format:check # prettier --check
-npm run format:write # prettier --write (fix formatting)
-npm run build:image  # build Docker image (linux/amd64)
-npm run image:build:push  # build + push to Docker Hub
+pnpm dev          # start server + client (hot reload)
+pnpm build        # full production build
+pnpm test         # run Jest suite
+pnpm lint         # oxlint (.oxlintrc.json)
+pnpm format:check # prettier --check
+pnpm format:write # prettier --write (fix formatting)
+pnpm build:image  # build Docker image (linux/amd64)
+pnpm image:build:push  # build + push to Docker Hub
 ```
